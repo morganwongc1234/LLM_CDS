@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>BIOM9450 CDS – Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>BIOM9450 CDS – Minimal Frontend</h1>
+  <small>Register → Login (JWT) → Patients (list/create)</small>
+
+  <fieldset>
+    <legend>1) Health check</legend>
+    <button id="btnHealth">GET /api/health</button>
+    <pre id="outHealth"></pre>
+  </fieldset>
+
+  <fieldset>
+    <legend>2) Register user</legend>
+    <div class="half">
+      <select id="regPrefix">
+        <option value="">Prefix (optional)</option>
+        <option>Dr.</option><option>Prof.</option><option>Mr.</option><option>Ms.</option><option>Mrs.</option>
+      </select>
+      <input id="regFirst" placeholder="First name" required />
+      <input id="regMiddle" placeholder="Middle name (optional)" />
+      <input id="regLast" placeholder="Last name" required />
+      <input id="regEmail" type="email" placeholder="email@example.org" required />
+      <input id="regPass" type="password" placeholder="Password (min 8 chars)" required />
+      <select id="regRole">
+        <option value="clinician">clinician</option>
+        <option value="researcher">researcher</option>
+        <option value="admin">admin</option>
+        <option value="patient">patient</option>
+      </select>
+      <button id="btnRegister">POST /register_user</button>
+    </div>
+    <pre id="outRegister"></pre>
+  </fieldset>
+
+  <fieldset>
+    <legend>3) Login</legend>
+    <div class="half">
+      <input id="loginEmail" type="email" placeholder="email@example.org" required />
+      <input id="loginPass" type="password" placeholder="Password" required />
+      <button id="btnLogin">POST /login_user</button>
+      <button id="btnLogout" type="button">POST /logout</button>
+    </div>
+    <div>Token: <code id="tokenShort">(none)</code></div>
+    <pre id="outLogin"></pre>
+  </fieldset>
+
+  <fieldset>
+    <legend>4) Patients (protected)</legend>
+    <div class="row">
+        <div class="half">
+        <select id="patPrefix">
+          <option value="">Prefix (optional)</option>
+          <option>Mr.</option><option>Ms.</option><option>Mrs.</option><option>Dr.</option>
+        </select>
+        <input id="patFirst" placeholder="First name" required />
+        <input id="patMiddle" placeholder="Middle name (optional)" />
+        <input id="patLast" placeholder="Last name" required />
+        <input id="patDOB" type="date" placeholder="Date of birth" />
+        <select id="patSex">
+          <option value="">Sex</option>
+          <option>M</option><option>F</option><option>Other</option>
+        </select>
+        <input id="patPhone" placeholder="Phone number" />
+        <input id="patAddress" placeholder="Address" />
+        <input id="patEmail" type="email" placeholder="Email" />
+        <input id="patEmergencyName" placeholder="Emergency contact name" />
+        <input id="patEmergencyPhone" placeholder="Emergency contact phone" />
+        <input id="patNotes" placeholder="Notes (optional)" />
+        <button id="btnCreatePatient">POST /patients</button>
+        <button id="btnListPatients">GET /patients</button>
+        </div>
+
+        <div class="half">
+
+        <!-- NEW: fetch a patient by ID or by name/DOB -->
+        <div class="row" style="margin-top:.5rem">
+          <input id="patFetchId" type="number" min="1" placeholder="patient_id (optional)" />
+          <input id="patFetchFirst" placeholder="First name (optional)" />
+          <input id="patFetchLast" placeholder="Last name (required if no ID)" required />
+          <input id="patFetchDOB" type="date" placeholder="Date of birth (optional)" />
+          <button id="btnGetPatient">GET /patients (by ID or name/DOB)</button>
+        </div>
+        </div>
+    </div>
+
+    <pre id="outPatients"></pre>
+    </fieldset>
+
+  <script src="app.js"></script>
+</body>
+</html>
