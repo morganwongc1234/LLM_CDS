@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# Node dependencies
+node_modules/
+
+# Environment files
+.env
+*.env
+Backend/.env
+
+# Logs
+*.log
+
+# Build artifacts
+dist/
+build/
+coverage/
+tmp/
+
+# IDE settings
+.vscode/
+.idea/
