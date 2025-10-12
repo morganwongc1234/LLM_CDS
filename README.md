@@ -377,6 +377,6 @@ It outputs a structured Markdown report with:
 ## 🧾 License
 
 MIT License © 2025  
-Developed by **Mina Truong** for the BIOM9450 project.
+Developed by **Morgan Wong** and **James Fong** for the BIOM9450 project.
 
 ---
