@@ -1,8 +1,6 @@
 // test2.js — Vision + Patient Summary Report Generator
-// Usage examples:
-//   node test2.js
+//
 //   node test2.js --file ./images/chest_xray.jpg
-//   node test2.js --prompt "Patient complains of worsening cough and fever."
 //
 // Requires .env with MISTRAL_API_KEY=...
 
