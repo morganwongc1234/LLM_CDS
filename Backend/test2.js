@@ -1,6 +1,6 @@
 // test2.js — Vision + Patient Summary Report Generator
 //
-//   node test2.js --file ./images/chest_xray.jpg
+// node test2.js --file ./images/chest_xray.jpg
 //
 // Requires .env with MISTRAL_API_KEY=...
 
