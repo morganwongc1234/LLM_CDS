@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Dashboard – BIOM9450 CDS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav id="mainNav"></nav>
+  <nav id="subNav"></nav>
+
+  <main class="container grid">
+    <div class="card">
+      <h2>Patients</h2>
+      <div class="row">
+        <button id="btnListPatients" class="btn">GET /patients</button>
+      </div>
+
+      <h3 style="margin-top:12px">Create patient</h3>
+      <div class="row">
+        <div class="col">
+          <label>Prefix</label>
+          <select id="patPrefix">
+            <option value="">(optional)</option>
+            <option>Mr.</option><option>Ms.</option><option>Mrs.</option><option>Dr.</option>
+          </select>
+        </div>
+        <div class="col"><label>First name *</label><input id="patFirst" required /></div>
+        <div class="col"><label>Middle name</label><input id="patMiddle" /></div>
+        <div class="col"><label>Last name *</label><input id="patLast" required /></div>
+      </div>
+      <div class="row">
+        <div class="col"><label>DOB</label><input id="patDOB" type="date" /></div>
+        <div class="col"><label>Sex</label>
+          <select id="patSex"><option value=""></option><option>M</option><option>F</option><option>Other</option></select>
+        </div>
+        <div class="col"><label>Phone</label><input id="patPhone" /></div>
+        <div class="col"><label>Email</label><input id="patEmail" type="email" /></div>
+      </div>
+      <div class="row">
+        <div class="col"><label>Address</label><input id="patAddress" /></div>
+        <div class="col"><label>Emergency name</label><input id="patEmergencyName" /></div>
+        <div class="col"><label>Emergency phone</label><input id="patEmergencyPhone" /></div>
+      </div>
+      <div class="row">
+        <div class="col"><label>Notes</label><input id="patNotes" /></div>
+      </div>
+      <div class="row">
+        <button id="btnCreatePatient" class="btn">POST /patients</button>
+      </div>
+
+      <h3 style="margin-top:18px">Search patients</h3>
+      <p class="note">Last name is required; first name and DOB are optional.</p>
+      <div class="row">
+        <div class="col"><label>Last name *</label><input id="qLast" /></div>
+        <div class="col"><label>First name</label><input id="qFirst" /></div>
+        <div class="col"><label>DOB</label><input id="qDOB" type="date" /></div>
+      </div>
+      <div class="row">
+        <button id="btnSearchPatient" class="btn">GET /patients/search</button>
+      </div>
+
+      <div id="outPatients" class="card" style="padding:0;margin-top:14px"></div>
+    </div>
+  </main>
+
+  <footer>© 2025 BIOM9450 Clinical Decision Support System – UNSW</footer>
+  <!-- Shared logic for nav, auth, and API helpers -->
+  <script type="module" src="js/common.js"></script>
+
+  <!-- Page-specific logic for dashboard -->
+  <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

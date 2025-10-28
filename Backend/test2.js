@@ -62,7 +62,7 @@ function randomPatient() {
       'Dry cough and fatigue for 5 days',
       'Fever, pleuritic chest pain and breathlessness',
       'Productive cough with green sputum',
-      'Chest tightness with mild wheezing'
+      'Chest tightness with mild wheezing' 
     ]),
     history: randPick([
       'Type 2 diabetes, on metformin',

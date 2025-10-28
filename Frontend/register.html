@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>CDS Demo – Register</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Register</h1>
+  <nav id="mainNav"></nav>
+  <nav id="subNav"></nav>
+
+  <fieldset>
+    <legend>Create account</legend>
+    <form id="regForm" class="row" novalidate>
+      <div class="col">
+        <label>Prefix</label>
+        <select id="userPrefix">
+          <option value="">(optional)</option>
+          <option>Dr.</option>
+          <option>Prof.</option>
+          <option>Mr.</option>
+          <option>Ms.</option>
+          <option>Mrs.</option>
+        </select>
+
+        <label>First name</label>
+        <input id="userFirst" required />
+        <small class="field-error" id="errFirst"></small>
+
+        <label>Middle name (optional)</label>
+        <input id="userMiddle" />
+
+        <label>Last name</label>
+        <input id="userLast" required />
+        <small class="field-error" id="errLast"></small>
+
+        <label>Email</label>
+        <input id="regEmail" type="email" required />
+        <small class="field-error" id="errEmail"></small>
+
+        <label>Password (min 8 chars)</label>
+        <input id="regPass" type="password" required />
+        <small class="field-error" id="errPass"></small>
+
+        <label>Role</label>
+        <select id="regRole">
+          <option>clinician</option>
+          <option>researcher</option>
+          <option>admin</option>
+          <option>patient</option>
+        </select>
+
+        <button type="submit" class="primary" id="btnRegister">Register</button>
+      </div>
+    </form>
+    <pre id="outRegister"></pre>
+  </fieldset>
+
+  <script type="module" src="js/common.js"></script>
+  <script type="module" src="js/register.js"></script>
+</body>
+</html>
