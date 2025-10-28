@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Patients – List & Search</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <script type="module" src="js/common.js"></script>
+</head>
+<body>
+  <h1>Patients</h1>
+  <nav id="mainNav"></nav>
+  <nav id="subNav"></nav>
+
+  <fieldset>
+    <legend>Search patients</legend>
+    <div class="row">
+      <div class="col">
+        <label>Last name (required for search)</label>
+        <input id="qLast" placeholder="Last name" />
+      </div>
+      <div class="col">
+        <label>First name (optional)</label>
+        <input id="qFirst" placeholder="First name (optional)" />
+      </div>
+      <div class="col">
+        <label>Date of birth (optional)</label>
+        <input id="qDOB" type="date" />
+      </div>
+    </div>
+    <div class="row" style="margin-top:.75rem">
+      <button id="btnSearch" class="primary">Search</button>
+      <button id="btnList"  class="primary" style="margin-left:.5rem">List All</button>
+    </div>
+    <pre id="outPatients"></pre>
+  </fieldset>
+
+  <script type="module" src="js/common.js"></script>
+  <script type="module" src="js/patients_list.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>CDS Demo – Reports</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>LLM Reports</h1>
+  <nav id="mainNav"></nav>
+  <nav id="subNav"></nav>
+
+  <fieldset>
+    <legend>Generate a report</legend>
+    <div class="row">
+      <div class="col">
+        <label>Patient ID</label>
+        <input id="rep_pid" type="number" min="1" placeholder="e.g., 1" />
+        <label>Instructions (optional)</label>
+        <textarea id="rep_instr" rows="5" placeholder="Focus on respiratory findings and give an outpatient plan."></textarea>
+        <button id="btnGen" class="primary">POST /reports/generate</button>
+      </div>
+    </div>
+    <pre id="outGen"></pre>
+  </fieldset>
+
+  <fieldset>
+    <legend>Fetch saved report</legend>
+    <div class="row">
+      <div class="col">
+        <label>Report ID</label>
+        <input id="rep_id" type="number" min="1" />
+        <button id="btnGet" class="primary">GET /reports/:id</button>
+      </div>
+    </div>
+    <pre id="outGet"></pre>
+  </fieldset>
+
+  <script type="module">
+    import { initHeader } from './js/common.js';
+    document.addEventListener('DOMContentLoaded', initHeader);
+  </script>
+  
+  <script type="module" src="js/common.js"></script>
+  <script type="module" src="js/reports.js"></script>
+</body>
+</html>

@@ -1,206 +1,224 @@
-let token = null;
-const $ = (id) => document.getElementById(id);
-const show = (id, data) => { $(id).textContent = JSON.stringify(data, null, 2); };
+// Shared frontend logic for all pages
+const API_BASE = ''; // same origin: http://localhost:8000 (proxy or serve Frontend statically via backend)
+const $ = (sel) => document.querySelector(sel);
+const $all = (sel) => Array.from(document.querySelectorAll(sel));
 
-// -------- Health --------
-const btnHealth = $('btnHealth');
-if (btnHealth) {
-  btnHealth.onclick = async () => {
-    $('outHealth').textContent = 'Loading...';
-    const r = await fetch('/api/health');
-    show('outHealth', await r.json());
-  };
+function setToken(tok) { localStorage.setItem('token', tok); }
+function getToken() { return localStorage.getItem('token'); }
+function clearToken() { localStorage.removeItem('token'); }
+
+function authHeaders(extra = {}) {
+  const h = { 'Content-Type': 'application/json', ...extra };
+  const t = getToken();
+  if (t) h['Authorization'] = 'Bearer ' + t;
+  return h;
 }
 
-// -------- Register user (includes name fields) --------
-const btnRegister = $('btnRegister');
-if (btnRegister) {
-  btnRegister.onclick = async () => {
-    const email = $('regEmail').value.trim();
-    const password = $('regPass').value;
-    const role = $('regRole').value;
+async function apiGet(path) {
+  const r = await fetch(API_BASE + path, { headers: authHeaders() });
+  return r;
+}
+async function apiPost(path, body) {
+  const r = await fetch(API_BASE + path, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(body || {})
+  });
+  return r;
+}
 
-    const prefix = $('regPrefix').value || null;
-    const first_name = $('regFirst').value.trim();
-    const middle_name = $('regMiddle').value.trim() || null;
-    const last_name = $('regLast').value.trim();
+// ---- Page initialisers (called per page if elements exist) ----
+async function initHeader() {
+  const badge = $('#jsAuthBadge');
+  const logout = $('#jsLogout');
+  if (!badge || !logout) return;
 
-    if (!first_name || !last_name) return show('outRegister', { error: 'First & last name required' });
+  const t = getToken();
+  if (!t) {
+    badge.innerHTML = '<span class="badge">Not signed in</span>';
+    logout.classList.add('hidden');
+    return;
+  }
 
-    $('outRegister').textContent = 'Loading...';
-    const r = await fetch('/register_user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, role, prefix, first_name, middle_name, last_name })
-    });
+  // Try to decode a little information from /me (protected)
+  try {
+    const r = await apiGet('/me');
     const data = await r.json();
-    show('outRegister', data);
-
-    // If backend returns token on register, cache it
-    if (data && data.token) {
-      token = data.token;
-      const tEl = $('tokenShort');
-      if (tEl) tEl.textContent = token.slice(0, 16) + '…';
+    if (r.ok) {
+      const who = data?.me?.email || 'user';
+      badge.innerHTML = `<span class="badge ok">Signed in</span> <span class="note">${who}</span>`;
+      logout.classList.remove('hidden');
+    } else {
+      badge.innerHTML = `<span class="badge err">Token invalid</span>`;
+      logout.classList.add('hidden');
+      clearToken();
     }
+  } catch {
+    badge.innerHTML = `<span class="badge err">Server offline</span>`;
+    logout.classList.add('hidden');
+  }
+
+  logout.onclick = () => {
+    clearToken();
+    location.href = 'index.html';
   };
 }
 
-// -------- Login --------
-const btnLogin = $('btnLogin');
-if (btnLogin) {
-  btnLogin.onclick = async () => {
-    const email = $('loginEmail').value.trim();
-    const password = $('loginPass').value;
-    $('outLogin').textContent = 'Loading...';
-    const r = await fetch('/login_user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await r.json();
-    show('outLogin', data);
-    token = data.token || null;
-    $('tokenShort').textContent = token ? (token.slice(0, 16) + '…') : '(none)';
+async function initHome() {
+  const healthBtn = $('#btnHealth');
+  const out = $('#outHealth');
+  if (!healthBtn) return;
+  healthBtn.onclick = async () => {
+    out.textContent = 'Checking...';
+    const r = await apiGet('/api/health');
+    out.textContent = await r.text();
   };
 }
 
-// -------- Logout --------
-const btnLogout = $('btnLogout');
-if (btnLogout) {
-  btnLogout.onclick = async () => {
-    if (!token) {
-      return show('outLogin', { status: 'already_logged_out' });
-    }
-    try {
-      const r = await fetch('/logout', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      const text = await r.text();
-      let data; try { data = JSON.parse(text); } catch { data = { raw: text }; }
-      // Clear token on client regardless of server response
-      token = null;
-      $('tokenShort').textContent = '(none)';
-      show('outLogin', data);
-    } catch (err) {
-      token = null;
-      $('tokenShort').textContent = '(none)';
-      show('outLogin', { error: 'Network error during logout', detail: String(err) });
-    }
-  };
-}
+function initRegister() {
+  const form = $('#regForm');
+  const out = $('#outRegister');
+  if (!form) return;
 
-// -------- Create patient (matches new DB columns) --------
-const btnCreatePatient = $('btnCreatePatient');
-if (btnCreatePatient) {
-  btnCreatePatient.onclick = async () => {
-    if (!token) return show('outPatients', { error: 'Login first to get a token' });
-
-    const body = {
-      prefix: $('patPrefix').value || null,
-      first_name: $('patFirst').value.trim(),
-      middle_name: $('patMiddle').value.trim() || null,
-      last_name: $('patLast').value.trim(),
-      date_of_birth: $('patDOB').value || null,
-      sex: $('patSex').value || null,
-      phone_number: $('patPhone').value.trim() || null,
-      address: $('patAddress').value.trim() || null,
-      email: $('patEmail').value.trim() || null,
-      emergency_contact_name: $('patEmergencyName').value.trim() || null,
-      emergency_contact_phone: $('patEmergencyPhone').value.trim() || null,
-      notes: $('patNotes').value.trim() || null,
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const payload = {
+      prefix: $('#userPrefix').value || null,
+      first_name: $('#userFirst').value.trim(),
+      middle_name: $('#userMiddle').value.trim() || null,
+      last_name: $('#userLast').value.trim(),
+      email: $('#regEmail').value.trim(),
+      password: $('#regPass').value,
+      role: $('#regRole').value
     };
+    out.textContent = 'Registering...';
+    const r = await apiPost('/register_user', payload);
+    const data = await r.json();
+    out.textContent = JSON.stringify(data, null, 2);
 
-    if (!body.first_name || !body.last_name) {
-      return show('outPatients', { error: 'Patient first & last name required' });
+    // Auto-login if registration succeeded and backend returns token
+    if (r.ok && data.token) {
+      setToken(data.token);
+      location.href = 'dashboard.html';
     }
+  };
+}
 
-    $('outPatients').textContent = 'Creating...';
-    const r = await fetch('/patients', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': token ? 'Bearer ' + token : ''
-      },
-      body: JSON.stringify(body)
+function initLogin() {
+  const form = $('#loginForm');
+  const out = $('#outLogin');
+  if (!form) return;
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    out.textContent = 'Logging in...';
+    const r = await apiPost('/login_user', {
+      email: $('#loginEmail').value.trim(),
+      password: $('#loginPass').value
     });
-
-    show('outPatients', await r.json());
+    const data = await r.json();
+    out.textContent = JSON.stringify(data, null, 2);
+    if (r.ok && data.token) {
+      setToken(data.token);
+      location.href = 'dashboard.html';
+    }
   };
 }
 
-// -------- List patients --------
-const btnList = $('btnListPatients');
-if (btnList) {
+function requireAuthGuard() {
+  if (!getToken()) {
+    location.href = 'login.html';
+    return false;
+  }
+  return true;
+}
+
+function initDashboard() {
+  if (!requireAuthGuard()) return;
+
+  const out = $('#outPatients');
+  const btnList = $('#btnListPatients');
+  const btnCreate = $('#btnCreatePatient');
+  const btnSearch = $('#btnSearchPatient');
+
+  // List all
   btnList.onclick = async () => {
-    if (!token) {
-      return show('outPatients', { error: 'Login first to get a token' });
-    }
-
-    $('outPatients').textContent = 'Loading...';
-    try {
-      const r = await fetch('/patients', {
-        method: 'GET',
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-
-      const text = await r.text(); // read raw to debug if not JSON
-      let data;
-      try { data = JSON.parse(text); } catch (_) { data = { raw: text }; }
-
-      if (!r.ok) {
-        console.error('GET /patients failed:', r.status, data);
-        return show('outPatients', { error: 'Request failed', status: r.status, data });
-      }
-
-      show('outPatients', data);
-    } catch (err) {
-      console.error('GET /patients error:', err);
-      show('outPatients', { error: 'Network error', detail: String(err) });
-    }
+    out.textContent = 'Loading...';
+    const r = await apiGet('/patients');
+    const data = await r.json();
+    renderPatients(data);
   };
-} else {
-  console.warn('btnListPatients element not found in DOM');
+
+  // Create
+  btnCreate.onclick = async () => {
+    const body = {
+      prefix: $('#patPrefix').value || null,
+      first_name: $('#patFirst').value.trim(),
+      middle_name: $('#patMiddle').value.trim() || null,
+      last_name: $('#patLast').value.trim(),
+      dob: $('#patDOB').value || null,
+      sex: $('#patSex').value || null,
+      phone: $('#patPhone').value || null,
+      address: $('#patAddress').value || null,
+      email: $('#patEmail').value || null,
+      emergency_name: $('#patEmergencyName').value || null,
+      emergency_phone: $('#patEmergencyPhone').value || null,
+      notes: $('#patNotes').value || null
+    };
+    out.textContent = 'Creating...';
+    const r = await apiPost('/patients', body);
+    const data = await r.json();
+    out.textContent = JSON.stringify(data, null, 2);
+  };
+
+  // Search (by last name required; first_name/dob optional)
+  btnSearch.onclick = async () => {
+    const ln = $('#qLast').value.trim();
+    const fn = $('#qFirst').value.trim();
+    const dob = $('#qDOB').value;
+    if (!ln) { out.textContent = 'Enter at least a last name.'; return; }
+
+    const qs = new URLSearchParams();
+    qs.set('last_name', ln);
+    if (fn) qs.set('first_name', fn);
+    if (dob) qs.set('dob', dob);
+
+    out.textContent = 'Searching...';
+    const r = await apiGet('/patients/search?' + qs.toString());
+    const data = await r.json();
+    renderPatients(data);
+  };
+
+  function renderPatients(data) {
+    if (!Array.isArray(data)) {
+      $('#outPatients').textContent = JSON.stringify(data, null, 2);
+      return;
+    }
+    const rows = data.map(p => `
+      <tr>
+        <td>${p.patient_id}</td>
+        <td>${[p.prefix, p.first_name, p.middle_name, p.last_name].filter(Boolean).join(' ')}</td>
+        <td>${p.dob ?? ''}</td>
+        <td>${p.sex ?? ''}</td>
+        <td>${p.phone ?? ''}</td>
+        <td>${p.email ?? ''}</td>
+        <td>${p.address ?? ''}</td>
+      </tr>`).join('');
+    $('#outPatients').innerHTML = `
+      <table class="table">
+        <thead>
+          <tr><th>ID</th><th>Name</th><th>DOB</th><th>Sex</th><th>Phone</th><th>Email</th><th>Address</th></tr>
+        </thead>
+        <tbody>${rows || `<tr><td colspan="7">No results</td></tr>`}</tbody>
+      </table>`;
+  }
 }
 
-// -------- Get single patient (by ID, name, DOB) --------
-const btnGetOne = $('btnGetPatient');
-if (btnGetOne) {
-  btnGetOne.onclick = async () => {
-    if (!token) return show('outPatients', { error: 'Login first to get a token' });
-
-    const pid = $('patFetchId')?.value ? parseInt($('patFetchId').value, 10) : null;
-    const first_name = $('patFetchFirst')?.value.trim() || null;
-    const last_name = $('patFetchLast')?.value.trim() || null;
-    const date_of_birth = $('patFetchDOB')?.value || null;
-
-    if (!pid && !last_name) {
-      return show('outPatients', { error: 'Provide either patient_id or last_name' });
-    }
-
-    $('outPatients').textContent = 'Loading...';
-    try {
-      // Build query parameters
-      const params = new URLSearchParams();
-      if (pid) params.append('id', String(pid));
-      if (first_name) params.append('first_name', first_name);
-      if (last_name) params.append('last_name', last_name);
-      if (date_of_birth) params.append('dob', date_of_birth);
-
-      const r = await fetch(`/patients/search?${params.toString()}`, {
-        method: 'GET',
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-
-      const text = await r.text();
-      let data; try { data = JSON.parse(text); } catch { data = { raw: text }; }
-      if (!r.ok) return show('outPatients', { error: 'Request failed', status: r.status, data });
-      show('outPatients', data);
-    } catch (err) {
-      console.error('GET /patients/search error:', err);
-      show('outPatients', { error: 'Network error', detail: String(err) });
-    }
-  };
-} else {
-  console.warn('btnGetPatient element not found in DOM');
-}
+// ---- Kick off per-page initialisers ----
+document.addEventListener('DOMContentLoaded', () => {
+  initHeader();
+  initHome();
+  initRegister();
+  initLogin();
+  if (location.pathname.endsWith('dashboard.html')) initDashboard();
+});

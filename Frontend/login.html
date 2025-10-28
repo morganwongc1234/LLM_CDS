@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>CDS Demo – Login</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Login</h1>
+  <nav id="mainNav"></nav>
+  <nav id="subNav"></nav>
+
+  <fieldset>
+    <legend>Enter credentials</legend>
+    <form id="loginForm" class="row" autocomplete="on">
+      <div class="col">
+        <label for="loginEmail">Email</label>
+        <input id="loginEmail" name="email" type="email" placeholder="email@example.org" required />
+        <label for="loginPass">Password</label>
+        <input id="loginPass" name="password" type="password" placeholder="Password" required />
+        <button class="primary" type="submit" id="btnLogin">Login</button>
+      </div>
+    </form>
+    <pre id="outLogin"></pre>
+    <div id="statusMsg" class="status"></div>
+  </fieldset>
+
+  <script type="module" src="js/common.js"></script>
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>

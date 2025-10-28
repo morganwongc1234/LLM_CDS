@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Patients – Register New</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <script type="module" src="js/common.js"></script>
+</head>
+<body>
+  <h1>Patients</h1>
+  <nav id="mainNav"></nav>
+  <nav id="subNav"></nav>
+
+  <fieldset>
+    <legend>Create patient</legend>
+    <div class="row">
+      <div class="col">
+        <label>Prefix</label>
+        <select id="patPrefix">
+          <option value=""></option>
+          <option>Mr.</option><option>Ms.</option><option>Mrs.</option><option>Dr.</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>First name *</label>
+        <input id="patFirst" placeholder="First name" />
+      </div>
+      <div class="col">
+        <label>Middle name</label>
+        <input id="patMiddle" placeholder="Middle name (optional)" />
+      </div>
+      <div class="col">
+        <label>Last name *</label>
+        <input id="patLast" placeholder="Last name" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label>Date of birth</label>
+        <input id="patDOB" type="date" />
+      </div>
+      <div class="col">
+        <label>Sex</label>
+        <select id="patSex">
+          <option value=""></option>
+          <option>M</option><option>F</option><option>Other</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>Phone</label>
+        <input id="patPhone" placeholder="Phone number" />
+      </div>
+      <div class="col">
+        <label>Email</label>
+        <input id="patEmail" type="email" placeholder="Email" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label>Address</label>
+        <input id="patAddress" placeholder="Address" />
+      </div>
+      <div class="col">
+        <label>Emergency contact name</label>
+        <input id="patEmergencyName" placeholder="Emergency contact name" />
+      </div>
+      <div class="col">
+        <label>Emergency contact phone</label>
+        <input id="patEmergencyPhone" placeholder="Emergency contact phone" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label>Notes</label>
+        <textarea id="patNotes" rows="3" placeholder="Notes (optional)"></textarea>
+      </div>
+    </div>
+
+    <button id="btnCreatePatient" class="primary">Create Patient</button>
+    <pre id="outCreate"></pre>
+  </fieldset>
+
+  <script type="module" src="js/common.js"></script>
+  <script type="module" src="js/patient_register.js"></script>
+</body>
+</html>
