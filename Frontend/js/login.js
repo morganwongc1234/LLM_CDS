@@ -39,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
             status.className = 'error';
           }
         }
-        // Auto-login if API returns token
         if (r.ok && data.token) {
           setToken(data.token);
           if (data.role === 'clinician' || data.role === 'researcher') {
@@ -59,35 +58,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Login page (if present) ---
   const loginForm = $('#loginForm');
-  const outLogin = $('#outLogin');
   if (loginForm) {
     const emailEl = $('#loginEmail');
     const passEl = $('#loginPass');
-    console.log('[login] login form found');
     loginForm.onsubmit = async (e) => {
       e.preventDefault();
       if (status) status.className = '';
-      outLogin.textContent = 'Logging in...';
       if (status) status.textContent = 'Logging in…';
+
       try {
         const r = await apiPost('/login_user', {
-          email: emailEl ? emailEl.value.trim() : $('#loginEmail').value.trim(),
-          password: passEl ? passEl.value : $('#loginPass').value
+          email: emailEl?.value.trim(),
+          password: passEl?.value
         });
         const data = await r.json();
         console.log('[login] /login_user status', r.status, data);
 
-        // Always echo raw response for debugging
-        outLogin.textContent = JSON.stringify(data, null, 2);
-
         if (r.ok && data.token) {
-          // Success UI
           if (status) {
             status.textContent = '✅ Login successful. Redirecting…';
             status.className = 'success';
           }
           setToken(data.token);
-          // Role-based redirect
           if (data.role === 'clinician' || data.role === 'researcher') {
             location.href = 'homepage/clinician.html';
           } else if (data.role === 'admin') {
@@ -98,18 +90,15 @@ document.addEventListener('DOMContentLoaded', () => {
             location.href = 'dashboard.html';
           }
         } else {
-          // Failure UI — show server-provided message verbatim if present
-          const msg = data && (data.message || data.error || data.detail) ? (data.message || data.error || data.detail) : `Request failed (HTTP ${r.status})`;
+          const msg = data?.message || data?.error || data?.detail || `Request failed (HTTP ${r.status})`;
           if (status) {
             status.textContent = `❌ ${msg}`;
             status.className = 'error';
           }
-          // Preserve email; clear only password
           if (passEl) passEl.value = '';
           if (passEl) passEl.focus();
         }
       } catch (err) {
-        outLogin.textContent = JSON.stringify({ error: String(err) }, null, 2);
         if (status) {
           status.textContent = `❌ Login error: ${String(err)}`;
           status.className = 'error';
@@ -118,4 +107,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
   }
+
+  const btnGoRegister = $('#btnGoRegister');
+  if (btnGoRegister) {
+    btnGoRegister.addEventListener('click', () => {
+      location.href = 'register.html';
+    });
+  }
+  
 });

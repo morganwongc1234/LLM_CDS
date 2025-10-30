@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>CDS Demo – Login</title>
@@ -11,20 +11,36 @@
   <nav id="mainNav"></nav>
   <nav id="subNav"></nav>
 
-  <fieldset>
-    <legend>Enter credentials</legend>
-    <form id="loginForm" class="row" autocomplete="on">
-      <div class="col">
-        <label for="loginEmail">Email</label>
-        <input id="loginEmail" name="email" type="email" placeholder="email@example.org" required />
-        <label for="loginPass">Password</label>
-        <input id="loginPass" name="password" type="password" placeholder="Password" required />
-        <button class="primary" type="submit" id="btnLogin">Login</button>
-      </div>
-    </form>
-    <pre id="outLogin"></pre>
-    <div id="statusMsg" class="status"></div>
-  </fieldset>
+  <div class="login-container">
+    <!-- LEFT: Image -->
+    <div class="login-illustration">
+      <img src="Image/login.png" alt="AI Clinical Illustration" />
+    </div>
+
+    <!-- RIGHT: Login form -->
+    <div class="login-form">
+      <form id="loginForm" autocomplete="on">
+        <legend>Login to Your Account</legend>
+        <fieldset class="form-wrapper">
+
+          <label for="loginEmail">Email</label>
+
+          <input id="loginEmail" name="email" type="email" placeholder="email@example.org" required />
+
+          <label for="loginPass">Password</label>
+          <input id="loginPass" name="password" type="password" placeholder="Password" required />
+
+          <div id="statusMsg" class="status"></div>
+
+          <button class="primary" type="submit" id="btnLogin">Login</button>
+
+          <button class="secondary" type="button" id="btnGoRegister">Haven’t got an account? Register</button>
+
+          <pre id="outLogin"></pre>
+        </fieldset>
+      </form>
+    </div>
+  </div>
 
   <script type="module" src="js/common.js"></script>
   <script type="module" src="js/login.js"></script>
