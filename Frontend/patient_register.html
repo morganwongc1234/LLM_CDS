@@ -8,77 +8,52 @@
   <script type="module" src="js/common.js"></script>
 </head>
 <body>
-  <h1>Patients</h1>
+  <h1>Create New Patient</h1>
   <nav id="mainNav"></nav>
   <nav id="subNav"></nav>
 
-  <fieldset>
-    <legend>Create patient</legend>
-    <div class="row">
-      <div class="col">
-        <label>Prefix</label>
-        <select id="patPrefix">
-          <option value=""></option>
-          <option>Mr.</option><option>Ms.</option><option>Mrs.</option><option>Dr.</option>
-        </select>
-      </div>
-      <div class="col">
-        <label>First name *</label>
-        <input id="patFirst" placeholder="First name" />
-      </div>
-      <div class="col">
-        <label>Middle name</label>
-        <input id="patMiddle" placeholder="Middle name (optional)" />
-      </div>
-      <div class="col">
-        <label>Last name *</label>
-        <input id="patLast" placeholder="Last name" />
-      </div>
-    </div>
+  <fieldset id="createPatientForm" >
+    <label>Prefix</label>
+    <select id="patPrefix">
+      <option value=""></option>
+      <option>Mr.</option><option>Ms.</option><option>Mrs.</option><option>Dr.</option>
+    </select>
 
-    <div class="row">
-      <div class="col">
-        <label>Date of birth</label>
-        <input id="patDOB" type="date" />
-      </div>
-      <div class="col">
-        <label>Sex</label>
-        <select id="patSex">
-          <option value=""></option>
-          <option>M</option><option>F</option><option>Other</option>
-        </select>
-      </div>
-      <div class="col">
-        <label>Phone</label>
-        <input id="patPhone" placeholder="Phone number" />
-      </div>
-      <div class="col">
-        <label>Email</label>
-        <input id="patEmail" type="email" placeholder="Email" />
-      </div>
-    </div>
+    <label>First name *</label>
+    <input id="patFirst" placeholder="First name" />
 
-    <div class="row">
-      <div class="col">
-        <label>Address</label>
-        <input id="patAddress" placeholder="Address" />
-      </div>
-      <div class="col">
-        <label>Emergency contact name</label>
-        <input id="patEmergencyName" placeholder="Emergency contact name" />
-      </div>
-      <div class="col">
-        <label>Emergency contact phone</label>
-        <input id="patEmergencyPhone" placeholder="Emergency contact phone" />
-      </div>
-    </div>
+    <label>Middle name</label>
+    <input id="patMiddle" placeholder="Middle name (optional)" />
 
-    <div class="row">
-      <div class="col">
-        <label>Notes</label>
-        <textarea id="patNotes" rows="3" placeholder="Notes (optional)"></textarea>
-      </div>
-    </div>
+    <label>Last name *</label>
+    <input id="patLast" placeholder="Last name" />
+
+    <label>Date of birth</label>
+    <input id="patDOB" type="date" />
+
+    <label>Sex</label>
+    <select id="patSex">
+      <option value=""></option>
+      <option>M</option><option>F</option><option>Other</option>
+    </select>
+
+    <label>Phone</label>
+    <input id="patPhone" placeholder="Phone number" />
+
+    <label>Email</label>
+    <input id="patEmail" type="email" placeholder="Email" />
+
+    <label>Address</label>
+    <input id="patAddress" placeholder="Address" />
+
+    <label>Emergency contact name</label>
+    <input id="patEmergencyName" placeholder="Emergency contact name" />
+
+    <label>Emergency contact phone</label>
+    <input id="patEmergencyPhone" placeholder="Emergency contact phone" />
+
+    <label>Notes</label>
+    <textarea id="patNotes" rows="3" placeholder="Notes (optional)"></textarea>
 
     <button id="btnCreatePatient" class="primary">Create Patient</button>
     <pre id="outCreate"></pre>
