@@ -5,11 +5,9 @@
   <title>CDS Demo – Login</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style/login.css" />
 </head>
 <body>
-  <h1>Login</h1>
-  <nav id="mainNav"></nav>
-  <nav id="subNav"></nav>
 
   <div class="login-container">
     <!-- LEFT: Image -->
@@ -18,30 +16,26 @@
     </div>
 
     <!-- RIGHT: Login form -->
-    <div class="login-form">
-      <form id="loginForm" autocomplete="on">
+    <div class="loginForm">
+      <div class="form-wrapper">
         <legend>Login to Your Account</legend>
 
         <button class="secondary" type="button" id="btnGoRegister">Haven’t got an account? Register</button>
-        
-        <fieldset class="form-wrapper">
 
+        <form id="loginForm" autocomplete="on">
           <label for="loginEmail">Email</label>
-
           <input id="loginEmail" name="email" type="email" placeholder="email@example.org" required />
+          <small class="field-error" id="errLoginEmail"></small>
 
           <label for="loginPass">Password</label>
           <input id="loginPass" name="password" type="password" placeholder="Password" required />
-
-          <div id="statusMsg" class="status"></div>
+          <small class="field-error" id="errLoginPass"></small>
 
           <button class="primary" type="submit" id="btnLogin">Login</button>
 
-          <pre id="outLogin"></pre>
-        </fieldset>
-      </form>
+        </form>
+      </div>
     </div>
-  </div>
 
   <script type="module" src="js/common.js"></script>
   <script type="module" src="js/login.js"></script>
