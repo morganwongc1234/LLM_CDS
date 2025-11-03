@@ -58,8 +58,8 @@ export function renderMainNav(containerEl, user) {
 
   const patientsDropdown = `
     <div class="dropdown">
-      <button class="dropbtn" type="button" aria-haspopup="true" aria-expanded="false">
-        Patients <span aria-hidden="true">▾</span>
+      <button class="dropbtn" type="button" style="font-weight:700;">
+        Patients 
       </button>
       <div class="dropdown-content" role="menu">
         <a href="${pre}patients_list.html" role="menuitem">Patients List</a>
