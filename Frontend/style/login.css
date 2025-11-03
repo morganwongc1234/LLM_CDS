@@ -1,0 +1,54 @@
+/* ===============================
+   LOGIN PAGE: Container Layout
+   =============================== */
+body {
+  display: flex;
+  justify-content: center;   /* Horizontal centering */
+  align-items: center;       /* Vertical centering */
+  min-height: 100vh;         /* Take full viewport height */
+  margin: 0;                 /* Remove default margins */
+  padding: 0 1.5rem;
+  
+  max-width: 100%;
+  background: repeating-linear-gradient(45deg, #f5faff 0, #f5faff 10px, #dbeafe 10px, #dbeafe 20px);      
+}
+
+.login-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin: 3rem auto;
+  max-width: 1200px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.loginForm {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 2rem;
+  background-color: var(--color-surface);
+  background: linear-gradient(-135deg, #ffffff 0%, #a4b4e7 100%);
+}
+
+/* ===============================
+   LOGIN PAGE: Illustration
+   =============================== */
+.login-illustration {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 2rem;
+  background: linear-gradient(135deg, #ffffff 0%, #a4b4e7 100%);
+}
+
+.login-illustration img {
+  width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  display: block;
+}
