@@ -48,6 +48,10 @@ function validateAll() {
   return ok1 && ok2 && ok3 && ok4;
 }
 
+document.querySelector('#btnGoLogin')?.addEventListener('click', () => {
+  location.href = 'login.html';
+});
+
 // --- Wire up blur/onChange validation ---
 document.addEventListener('DOMContentLoaded', async () => {
   await initHeader();
