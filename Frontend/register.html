@@ -1,40 +1,56 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>CDS Demo – Register</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style/register.css" />
 </head>
 <body>
-  <h1>Register</h1>
-  <nav id="mainNav"></nav>
-  <nav id="subNav"></nav>
 
-  <fieldset>
-    <legend>Create account</legend>
-    <form id="regForm" class="row" novalidate>
-      <div class="col">
-        <label>Prefix</label>
-        <select id="userPrefix">
-          <option value="">(optional)</option>
-          <option>Dr.</option>
-          <option>Prof.</option>
-          <option>Mr.</option>
-          <option>Ms.</option>
-          <option>Mrs.</option>
-        </select>
+<div class="registerContainer">
+  <div class="registerIllustration">
+    <img src="Image/login.png" alt="AI CDS Illustration" />
+  </div>
 
-        <label>First name</label>
-        <input id="userFirst" required />
-        <small class="field-error" id="errFirst"></small>
+  <div class="registerForm">
+    <div class="form-wrapper">
+      <legend>Create Account</legend>
 
-        <label>Middle name (optional)</label>
-        <input id="userMiddle" />
+      <button id="btnGoLogin" class="secondary">Already have an account? Login</button>
 
-        <label>Last name</label>
-        <input id="userLast" required />
-        <small class="field-error" id="errLast"></small>
+      <form id="regForm" novalidate>
+        <div class="rowName row">
+          <div class="col prefix">
+            <label>Prefix</label>
+            <select id="userPrefix">
+              <option value="">(optional)</option>
+              <option>Dr.</option>
+              <option>Prof.</option>
+              <option>Mr.</option>
+              <option>Ms.</option>
+              <option>Mrs.</option>
+            </select>
+          </div>
+
+          <div class="col">
+            <label>First name</label>
+            <input id="userFirst" required />
+            <small class="field-error" id="errFirst"></small>
+          </div>
+
+          <div class="col">
+            <label>Middle name</label>
+            <input id="userMiddle" placeholder="Optional"/>
+          </div>
+
+          <div class="col">
+            <label>Last name</label>
+            <input id="userLast" required />
+            <small class="field-error" id="errLast"></small>
+          </div>
+        </div>
 
         <label>Email</label>
         <input id="regEmail" type="email" required />
@@ -53,12 +69,13 @@
         </select>
 
         <button type="submit" class="primary" id="btnRegister">Register</button>
-      </div>
-    </form>
-    <pre id="outRegister"></pre>
-  </fieldset>
+      </form>
 
-  <script type="module" src="js/common.js"></script>
-  <script type="module" src="js/register.js"></script>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/common.js"></script>
+<script type="module" src="js/register.js"></script>
 </body>
 </html>
