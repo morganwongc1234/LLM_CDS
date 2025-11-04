@@ -155,3 +155,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const mainNav = document.querySelector('#mainNav');
   if (mainNav) initHeader();
 });
+
+export function setYear(sel) {
+  const el = document.querySelector(sel);
+  if (el) el.textContent = new Date().getFullYear();
+}
+
+export function requireAuthGuard() {
+  const token = getToken();
+  if (!token) {
+    alert('Please login first.');
+
+    // Detect subfolder
+    const redirect = location.pathname.includes('/homepage/')
+      ? '../login.html'
+      : 'login.html';
+
+    window.location.href = redirect;
+    return false;
+  }
+  return true;
+}
