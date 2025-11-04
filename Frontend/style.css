@@ -220,6 +220,19 @@ legend {
   min-width: 280px;
 }
 
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin: 3rem auto;
+  max-width: 1200px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
 label {
   padding-inline-start: 0.2rem;
   width: 90%;

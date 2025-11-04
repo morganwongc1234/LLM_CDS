@@ -1,0 +1,36 @@
+input {
+    /* margin: 0; */
+    width: 95%;
+}
+
+.rowName input {
+    width: 150px;
+    margin: 0;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.col {
+  flex: 1;
+  min-width: 100px
+}
+
+.container {
+  grid-template-columns: 1fr;
+}
+
+.form-wrapper {
+  width: 90%;
+}
+
+.searchPatientsForm {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 2rem;
+  background-color: var(--color-surface);
+}
