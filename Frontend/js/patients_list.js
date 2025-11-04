@@ -61,6 +61,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   await initHeader();
   if (!requireAuthGuard()) return;
 
-  $('#btnList').onclick = listAll;
+  // $('#btnList').onclick = listAll;
   $('#btnSearch').onclick = search;
 });
