@@ -1,18 +1,19 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>CDS Demo – Home</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <h1>Clinical Decision Support (CDS)</h1>
 
-  <!-- Dynamic navs (rendered by common.js / initHeader + renderSubNav) -->
+  <!-- Navigation rendered dynamically -->
   <nav id="mainNav"></nav>
   <nav id="subNav"></nav>
 
+  <!-- Description -->
   <fieldset>
     <h1>What this site does</h1>
     <p>
@@ -29,41 +30,57 @@
     </ul>
   </fieldset>
 
-<fieldset>
-  <h1>Backend Health Check</h1>
+  <!-- Health check -->
+  <fieldset>
+    <h1>Backend Health Check</h1>
 
-  <!-- Health check button -->
-  <div class="row">
-    <div>
-      <button class="primary" id="btnHealth">GET /api/health</button>
+    <div class="row">
+      <div>
+        <button class="primary" id="btnHealth">GET /api/health</button>
+      </div>
     </div>
-  </div>
 
-  <!-- Live status -->
-  <div id="healthStatus" style="margin-top: 1rem; font-weight: 600; color: #333;">
-    Status:
-    <span id="serverStatus" style="color:#999;">Waiting...</span>
-  </div>
+    <div id="healthStatus" style="margin-top: 1rem; font-weight: 600; color: #333;">
+      Status:
+      <span id="serverStatus" style="color:#999;">Waiting...</span>
+    </div>
 
-  <!-- Server output -->
-  <pre
-    id="outHealth"
-    style="
-      background-color:#111;
-      color:#0f0;
-      padding:0.75rem;
-      border-radius:0.5rem;
-      margin-top:0.5rem;
-      white-space:pre-wrap;
-      font-family: monospace;
-    "
-  ></pre>
-</fieldset>
+    <pre
+      id="outHealth"
+      style="
+        background-color:#111;
+        color:#0f0;
+        padding:0.75rem;
+        border-radius:0.5rem;
+        margin-top:0.5rem;
+        white-space:pre-wrap;
+        font-family: monospace;
+      "
+    ></pre>
+  </fieldset>
 
+  <!-- Footer -->
   <footer>CDS • <span id="year"></span></footer>
 
-  <!-- index.js imports common.js and calls initHeader() -->
-  <script type="module" src="js/common.js"></script>
-  <script type="module" src="js/index.js"></script>
+  <!-- Scripts (module) -->
+  <script type="module">
+    import { initHeader, setYear } from './js/common.js';
+    import { wireHealth } from './js/index.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      console.log('[index.html] DOMContentLoaded fired');
+
+      await initHeader();
+      setYear('#year');
+
+      const wired = wireHealth();
+      if (!wired) {
+        setTimeout(() => {
+          console.log('[index.html] retry wiring health button');
+          wireHealth();
+        }, 0);
+      }
+    });
+  </script>
 </body>
 </html>
