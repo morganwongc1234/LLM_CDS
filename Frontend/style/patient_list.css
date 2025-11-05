@@ -27,6 +27,10 @@ input {
   width: 90%;
 }
 
+#qFirst, #qLast {
+  height: 25px !important;
+}
+
 .searchPatientsForm {
   display: flex;
   justify-content: center;
