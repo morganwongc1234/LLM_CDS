@@ -16,25 +16,32 @@
     <div class="searchPatientsForm">
       <div class="form-wrapper">
         <legend>Search patients</legend>
+
         <div class="row">
-        <div class="col">
-          <label>Last name (required for search)</label>
-          <input id="qLast" placeholder="Last name" />
+          <div class="col">
+            <label>Last name (required for search)</label>
+            <input id="qLast" placeholder="Last name" />
+            <small id="errQLast" class="field-error"></small>
+          </div>
+          <div class="col">
+            <label>First name (optional)</label>
+            <input id="qFirst" placeholder="First name (optional)" />
+          </div>
+          <div class="col">
+            <label>Date of birth (optional)</label>
+            <input id="qDOB" type="date" />
+            <small id="errQDOB" class="field-error"></small>
+          </div>
         </div>
-        <div class="col">
-          <label>First name (optional)</label>
-          <input id="qFirst" placeholder="First name (optional)" />
+
+        <div class="row" style="margin-top: 1rem;">
+          <button id="btnSearch" class="primary">Search Patient</button>
         </div>
-        <div class="col">
-          <label>Date of birth (optional)</label>
-          <input id="qDOB" type="date" />
-        </div>
+
+        <pre id="outPatients"></pre>
       </div>
-      <div class="row" style="margin-top: 1rem;">
-        <button id="btnSearch" class="primary">Search Patient</button>
-      </div>
-      <pre id="outPatients"></pre>
-      </div>
+    </div>
+  </div>
 
   <script type="module" src="js/common.js"></script>
   <script type="module" src="js/patients_list.js"></script>
