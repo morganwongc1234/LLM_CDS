@@ -34,9 +34,9 @@ function randPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
 function randomPatient() {
-  const firstNames = ['Alex','Jamie','Morgan','Taylor','Jordan','Riley','Casey','Avery'];
-  const lastNames  = ['Wong','Patel','Nguyen','Smith','Brown','Martin','Singh','Lee'];
-  const sex = randPick(['M','F']);
+  const firstNames = ['Alex', 'Jamie', 'Morgan', 'Taylor', 'Jordan', 'Riley', 'Casey', 'Avery'];
+  const lastNames = ['Wong', 'Patel', 'Nguyen', 'Smith', 'Brown', 'Martin', 'Singh', 'Lee'];
+  const sex = randPick(['M', 'F']);
   const age = randInt(25, 82);
   const height = randInt(155, 190);
   const weight = randInt(50, 110);
@@ -52,9 +52,9 @@ function randomPatient() {
     full_name: `${randPick(firstNames)} ${randPick(lastNames)}`,
     age,
     sex,
-    dob: `${new Date().getFullYear() - age}-0${randInt(1,9)}-${String(randInt(1,28)).padStart(2,'0')}`,
+    dob: `${new Date().getFullYear() - age}-0${randInt(1, 9)}-${String(randInt(1, 28)).padStart(2, '0')}`,
     phone: `04${randInt(10000000, 99999999)}`,
-    address: `${randInt(1,99)} Example St, Sydney NSW`,
+    address: `${randInt(1, 99)} Example St, Sydney NSW`,
     vitals,
     height_cm: height,
     weight_kg: weight,
@@ -62,7 +62,7 @@ function randomPatient() {
       'Dry cough and fatigue for 5 days',
       'Fever, pleuritic chest pain and breathlessness',
       'Productive cough with green sputum',
-      'Chest tightness with mild wheezing' 
+      'Chest tightness with mild wheezing'
     ]),
     history: randPick([
       'Type 2 diabetes, on metformin',
@@ -90,8 +90,8 @@ function buildImageChunk() {
   const ext = path.extname(abs).toLowerCase();
   const mime =
     ext === '.png' ? 'image/png' :
-    ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' :
-    'application/octet-stream';
+      ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' :
+        'application/octet-stream';
   const b64 = fs.readFileSync(abs, { encoding: 'base64' });
   return { type: 'image_url', imageUrl: { url: `data:${mime};base64,${b64}` } };
 }
