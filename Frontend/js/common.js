@@ -176,3 +176,20 @@ export function requireAuthGuard() {
   }
   return true;
 }
+
+// ------- Input Validation Helpers -------
+export function setError(inputSel, errorSel = null, msg = '') {
+  const inputEl = document.querySelector(inputSel);
+  const errorEl = errorSel ? document.querySelector(errorSel) : inputEl?.nextElementSibling;
+
+  if (inputEl) inputEl.classList.add('error');
+  if (errorEl) errorEl.textContent = msg;
+}
+
+export function clearError(inputSel, errorSel = null) {
+  const inputEl = document.querySelector(inputSel);
+  const errorEl = errorSel ? document.querySelector(errorSel) : inputEl?.nextElementSibling;
+
+  if (inputEl) inputEl.classList.remove('error');
+  if (errorEl) errorEl.textContent = '';
+}

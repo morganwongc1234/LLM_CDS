@@ -4,28 +4,25 @@
   <meta charset="UTF-8" />
   <title>Clinician Dashboard – CDS</title>
   <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style/clinician.css" />
 </head>
 <body>
-  <main>
-    <h1>Clinical Decision Support (CDS) – Demo</h1>
+  <h1>Clinician and Researcher Dashboard</h1>
+  <nav id="mainNav"></nav>
+  <nav id="subNav"></nav>
 
-    <nav id="mainNav"></nav>
-    <nav id="subNav"></nav>
+  <body>
+  <h2 id="welcomeBanner"></h2>
+  </body>
 
-    <h2>Clinician and Reaseacher Dashboard</h2>
-
-    <section class="intro">
-      <h2>Welcome to the Clinical Decision Support System</h2>
-      <p>Here you can manage patients, view clinical data, and generate AI-assisted diagnostic reports.</p>
-    </section>
+  <main class="container">
 
     <section class="actions">
       <h3>Quick Actions</h3>
       <div class="button-grid">
-        <!-- Use links styled as buttons; avoid nesting <a> inside <button> -->
-        <a class="action-btn" href="../patients.html">Manage Patients</a>
-        <a class="action-btn" href="../reports.html">Generate Reports</a>
-        <a class="action-btn" href="../analytics.html">View Analytics</a>
+        <button class="secondary" href="../patients.html">Manage Patients</button>
+        <button class="secondary" href="../reports.html">Generate Reports</button>
+        <button class="secondary" href="../analytics.html">View Analytics</button>
       </div>
     </section>
   </main>
@@ -33,8 +30,6 @@
   <footer>
     <p>© 2025 BIOM9450 CDS | For authorised medical and research personnel only.</p>
   </footer>
-
-</main>
 
   <script type="module" src="../js/common.js"></script>
   <script type="module" src="../js/clinician.js"></script>

@@ -56,7 +56,7 @@ document.querySelector('#btnGoLogin')?.addEventListener('click', () => {
 document.addEventListener('DOMContentLoaded', async () => {
   await initHeader();
 
-  const form = $('#regForm');
+  const form = $('#registerForm');
   const out = $('#outRegister');
 
   // Lazy-guard if page missing elements
@@ -104,16 +104,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       const data = await r.json();
 
       if (!r.ok) {
-        // Show server message; keep email, clear password only
-        showJSON(out, data);
-        const msg = (data && (data.error || data.message)) || '';
-        if (/email/i.test(msg) && /exists|taken|duplicate/i.test(msg)) {
-          setError('errEmail', msg);
-        } else if (/password/i.test(msg)) {
-          setError('errPass', msg);
+        const msg = data.error;
+
+        // Handle duplicate email
+        if (msg === 'This email is already registered.') {
+          setError('errEmail', 'This email is already registered.');
+        } else {
+          // General fallback error
+          setText(out, msg);
         }
-        const pass = $('#regPass');
-        if (pass) pass.value = '';
+
+        $('#regPass').value = '';
         return;
       }
 

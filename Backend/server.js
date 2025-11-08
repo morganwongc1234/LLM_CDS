@@ -50,8 +50,11 @@ app.get('/api/health', (req, res) => res.send('✅ Server is healthy'));
 // --- Register user ---
 app.post('/register_user', async (req, res) => {
   const { prefix, first_name, middle_name, last_name, email, password, role } = req.body;
-  if (!email || !password || !first_name || !last_name || !role)
+  
+  if (!email || !password || !first_name || !last_name || !role) {
     return res.status(400).json({ error: 'Missing required fields' });
+  }
+
   try {
     const hash = await bcrypt.hash(password, 10);
     const [r] = await pool.execute(
@@ -59,16 +62,34 @@ app.post('/register_user', async (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [prefix, first_name, middle_name, last_name, email, hash, role]
     );
+
     const newUserId = r.insertId;
     const token = jwt.sign(
       { uid: newUserId, role, email },
       process.env.JWT_SECRET || 'devsecret',
       { expiresIn: '2h' }
     );
-    res.status(201).json({ status: 'ok', user_id: newUserId, email, role, token });
+
+    return res.status(201).json({
+      status: 'ok',
+      user_id: newUserId,
+      email,
+      role,
+      token
+    });
+
   } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({
+        error: 'This email is already registered.'
+      });
+    }
+
     console.error('Register error', err);
-    res.status(500).json({ error: 'Database error', detail: err.message });
+    return res.status(500).json({
+      error: 'Database error',
+      detail: err.message
+    });
   }
 });
 
@@ -111,8 +132,22 @@ app.post('/login_user', async (req, res) => {
 });
 
 // --- Current user ---
-app.get('/me', authMiddleware, (req, res) => {
-  res.json({ me: req.user });
+app.get('/me', authMiddleware, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT user_id, first_name, last_name, email, role FROM users WHERE user_id = ?',
+      [req.user.uid]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ me: rows[0] });
+  } catch (err) {
+    console.error('[ERROR] /me failed:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // --- Patients (protected) ---

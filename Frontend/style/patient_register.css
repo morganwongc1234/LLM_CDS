@@ -1,0 +1,58 @@
+
+
+.rowName input {
+    width: 150px;
+    margin: 0;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.container {
+  grid-template-columns: 1fr;
+}
+
+.form-wrapper {
+  width: 90%;
+}
+
+.prefix, .sex {
+  max-width: 100px;
+}
+
+.col {
+  flex: 1 1 0; /* grow, shrink, start at 0 width */
+  min-width: 0; /* ensures text truncates instead of overflowing */
+}
+
+input {
+  max-width: 250px;
+  width: 90%;
+  margin-left: 0;
+}
+
+#patEmail {
+  max-width: 350px;
+}
+
+
+/* 
+.nameRow input, 
+.DOBSexRow input,
+.contactRow input {
+  width: 90%;
+  margin-left: 0;
+} */
+
+
+
+.registerPatientsForm {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 2rem;
+  background-color: var(--color-surface);
+}
