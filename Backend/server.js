@@ -169,8 +169,8 @@ app.post('/patients', authMiddleware, async (req, res) => {
     return res.status(400).json({ error: 'first_name and last_name required' });
   try {
     const [r] = await pool.execute(
-      `INSERT INTO patients (prefix, first_name, middle_name, last_name, dob, sex, phone,
-                             address, email, emergency_name, emergency_phone, notes)
+      `INSERT INTO patients (prefix, first_name, middle_name, last_name, date_of_birth, sex, phone_number,
+                             address, email, emergency_contact_name, emergency_contact_phone, notes_text)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [prefix, first_name, middle_name, last_name, dob, sex, phone,
        address, email, emergency_name, emergency_phone, notes]
