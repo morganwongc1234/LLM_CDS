@@ -6,7 +6,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon --quiet server.js"
+    "dev": "nodemon --quiet server.js",
+    "demo": "node backend/run_demo.js"
   },
   "dependencies": {
     "@langchain/openai": "^1.0.0",
