@@ -1,0 +1,128 @@
+PATIENT RECORD
+
+Patient ID: 014583
+Name: [Redacted]
+DOB: [Redacted] Age: 37 Sex: Male
+Address: [Redacted]
+Contact: [Redacted]
+Date of Visit: 09/11/2025
+Provider: Dr [Redacted] (GP)
+Clinic: [Redacted]
+
+REASON FOR VISIT
+
+Abdominal discomfort, nausea, and reduced appetite for several days.
+
+HISTORY OF PRESENT ILLNESS
+
+Patient reports gradual onset of central abdominal pain for the past 5 days. Describes the pain as dull, occasionally sharp, located around the epigastric region, worse after eating. Associated with nausea and bloating. No vomiting, diarrhoea, or constipation.
+Denies fever, chills, haematemesis, melena, or urinary symptoms. No recent travel or sick contacts.
+Has been taking over-the-counter ibuprofen for headaches most evenings for the last 2 weeks. No alcohol intake in the past week.
+
+PAST MEDICAL HISTORY
+
+Migraine headaches
+
+Dyspepsia (intermittent)
+
+No known peptic ulcer disease
+
+No diabetes or hypertension
+
+MEDICATIONS
+
+Ibuprofen 400 mg as needed
+
+Sumatriptan 50 mg PRN (for migraine)
+
+ALLERGIES
+
+No known drug allergies
+
+FAMILY HISTORY
+
+Father: hypertension
+
+Mother: osteoarthritis
+
+No family history of gastrointestinal disorders
+
+SOCIAL HISTORY
+
+Non-smoker
+
+Drinks alcohol socially (1–2 drinks/week)
+
+Works as delivery driver
+
+Diet high in takeaway foods
+
+Lives with partner, no children
+
+REVIEW OF SYSTEMS
+
+General: tired, appetite reduced
+
+GI: epigastric discomfort, nausea, no vomiting or altered bowel habits
+
+CVS: no chest pain or palpitations
+
+GU: no dysuria
+
+Neuro: no headaches currently
+
+EXAMINATION
+
+BP: 118/76 mmHg HR: 74 bpm RR: 16/min Temp: 37.1°C SpO₂: 98% RA
+Weight: 82 kg Height: 178 cm BMI: 25.9
+
+General: appears slightly pale, not in distress
+Abdomen: soft, mild tenderness over epigastric area, no rebound or guarding, bowel sounds present
+CVS: normal S1/S2, no murmurs
+Resp: clear bilaterally
+ENT: normal oropharynx
+Neuro: normal tone and coordination
+
+INVESTIGATIONS
+
+FBC: Hb 130 g/L, WCC 7.8 ×10⁹/L, platelets 260 ×10⁹/L
+CRP: 6 mg/L (mildly elevated)
+LFTs: normal
+Urea/Creatinine: normal
+H. pylori breath test: positive
+
+ASSESSMENT
+
+Dyspepsia secondary to H. pylori–associated gastritis.
+Likely exacerbated by recent NSAID use.
+Differentials: peptic ulcer disease, functional dyspepsia.
+
+PLAN
+
+Commence H. pylori eradication therapy:
+
+Pantoprazole 40 mg BD
+
+Amoxicillin 1 g BD
+
+Clarithromycin 500 mg BD for 7 days
+
+Advise cessation of NSAIDs.
+
+Discussed dietary modification (avoid spicy/fatty foods, coffee, alcohol).
+
+Recommend smaller, regular meals.
+
+Review in 4 weeks or earlier if symptoms worsen.
+
+Consider gastroscopy if persistent symptoms post-eradication.
+
+COUNSELLING
+
+Discussed diagnosis and management plan, including potential side effects of antibiotics and the importance of completing therapy.
+Advised to seek medical attention if severe abdominal pain, vomiting blood, or black stools occur.
+Patient expressed understanding and agreement with plan.
+
+Electronically signed:
+Dr [Redacted]
+Date: 09/11/2025
