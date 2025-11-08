@@ -458,15 +458,6 @@ It outputs a structured Markdown report with:
 
 ---
 
-## ⚠️ Currently Unused Components
-
-| File | Status | Purpose |
-|------|---------|----------|
-| `api/routes.panels.js` | ⚠️ Not currently imported | REST API routes for starting and stepping flows |
-| `api/server.js` | ⚠️ Not currently active | Optional Express server for remote access |
-
----
-
 ## 🧾 License
 
 MIT License © 2025  
