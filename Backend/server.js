@@ -50,7 +50,7 @@ app.get('/api/health', (req, res) => res.send('✅ Server is healthy'));
 // --- Register user ---
 app.post('/register_user', async (req, res) => {
   const { prefix, first_name, middle_name, last_name, email, password, role } = req.body;
-  
+
   if (!email || !password || !first_name || !last_name || !role) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
@@ -173,7 +173,7 @@ app.post('/patients', authMiddleware, async (req, res) => {
                              address, email, emergency_contact_name, emergency_contact_phone, notes_text)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [prefix, first_name, middle_name, last_name, dob, sex, phone,
-       address, email, emergency_name, emergency_phone, notes]
+        address, email, emergency_name, emergency_phone, notes]
     );
     res.status(201).json({ status: 'ok', patient_id: r.insertId });
   } catch (err) {
