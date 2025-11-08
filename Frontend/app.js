@@ -18,13 +18,17 @@ async function apiGet(path) {
   const r = await fetch(API_BASE + path, { headers: authHeaders() });
   return r;
 }
-async function apiPost(path, body) {
-  const r = await fetch(API_BASE + path, {
+
+export async function apiPost(path, body, { noAuth = false } = {}) {
+  const headers = noAuth
+    ? { 'Content-Type': 'application/json' }
+    : authHeaders();
+
+  return fetch(API_BASE + path, {
     method: 'POST',
-    headers: authHeaders(),
+    headers,
     body: JSON.stringify(body || {})
   });
-  return r;
 }
 
 // ---- Page initialisers (called per page if elements exist) ----

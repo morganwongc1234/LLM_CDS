@@ -31,16 +31,16 @@ input {
 }
 
 .rowName input {
-    width: 150px;
-    margin: 0;
+  width: 120px;
+  margin: 0;
 }
 
 .prefix select{
-    width: 90px;
-    margin: 0;
-    font-size: small;
-
-    appearance: none;
+  width: 90px;
+  margin: 0;
+  font-size: small;
+  height: 40.8px !important;
+  appearance: none;
 }
 /* ===============================
    LOGIN PAGE: Illustration
