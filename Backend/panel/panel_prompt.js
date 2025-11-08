@@ -1,0 +1,1 @@
+// composing a single "panel" prompt
