@@ -2,7 +2,9 @@
 
 This project is a **Lightweight Clinical Decision Support (CDS)** system built for **BIOM9450**.  
 It allows users (clinicians, researchers, admins, and patients) to securely register, log in,  
-create and manage patient records, and generate AI-powered treatment plans using the **Mistral API**.
+create and manage patient records, providing a backend framework for storing and analysing 
+electronic health records. The built-in multi-agent clinical reasoning engine simulates a medical
+panel, performing step-wise diagnostic reasoning using the **OpenAI API**.
 
 ---
 
@@ -13,7 +15,9 @@ create and manage patient records, and generate AI-powered treatment plans using
 - Patient database with demographics, contacts, and notes
 - Protected REST API built with **Express + MySQL2**
 - Simple web frontend for testing (HTML + JS)
-- LLM integration via **Mistral AI** for report generation
+- Multi-agent reasoning panel with 5 simulated clinicians
+- Adaptive temperature and persona rotation for diverse reasoning
+- Persistent MySQL storage for EHRs, reasoning flows, and step history
 
 ---
 
@@ -22,15 +26,25 @@ create and manage patient records, and generate AI-powered treatment plans using
 ```
 LLM_CDS/
 ├── Backend/
-│   ├── server.js        # Express API
-│   ├── database.sql     # Database schema
-│   ├── .env.example     # Environment template
-│   ├── test.js          # Mistral API test script
+│   ├── lib/
+│   │   ├── db.js           # MySQL connection pool
+│   │   └── openai.js       # OpenAI JSON client helper
+│   │
+│   ├── panel/
+│   │   ├── orchestrator.js # Core controller for reasoning
+│   │   ├── panel_prompt.js # Prompt builder and temp control logic
+│   │   ├── personas.js     # Defines panel rules and logic
+│   │   └── schema.js       # Zod schema validation
+│   │
+│   ├── run_demo.js         # CLI runner
+│   ├── database.sql        # Database schema
+│   ├── .env.example        # Environment template
+│   ├── test.js             # Mistral API test script
 │   └── package.json
 │
 ├── Frontend/
-│   ├── index.html       # Minimal UI for testing API
-│   ├── app.js           # Frontend logic (fetch calls)
+│   ├── index.html          # Minimal UI for testing API
+│   ├── app.js              # Frontend logic (fetch calls)
 │   └── style.css
 │
 └── README.md
@@ -44,8 +58,8 @@ Before running the project, install the following:
 
 - **Node.js** ≥ 18  
 - **MySQL** ≥ 8.0  
-- (Optional) **curl** for quick endpoint testing  
-- A **Mistral API key** from [https://console.mistral.ai](https://console.mistral.ai)
+- (Optional) **curl** or **Postman** for testing REST endpoints
+- An **OpenAI API key** from [https://platform.openai.com](https://platform.openai.com)
 
 ---
 
@@ -89,23 +103,6 @@ mysql -u cds_user -pStrongPass!123 -h 127.0.0.1 cds_db < database.sql
 
 ### 4️⃣ Create a `.env` file in `/Backend`
 
-Example:
-
-```bash
-# --- MySQL ---
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_USER=cds_user
-DB_PASS=StrongPass!123
-DB_NAME=cds_db
-
-# --- JWT ---
-JWT_SECRET=SuperSecretKey
-
-# --- Mistral API ---
-MISTRAL_API_KEY=your_actual_api_key_here
-```
-
 ---
 
 ### 5️⃣ Start the server
@@ -145,18 +142,11 @@ Frontend/index.html
 
 ---
 
-### 7️⃣ Test Mistral AI integration
+### 7️⃣ Test ChatGPT AI integration
 
 ```bash
 cd Backend
 node test.js
-```
-
-Expected output (example):
-
-```
-Key length = 32 starts with = 6eitnt
-Chat: In Cantonese, you can say “你好” (nei5 hou2) to mean “hello”.
 ```
 
 ---
@@ -325,7 +315,7 @@ curl "http://localhost:8000/patients/search?last_name=Lee&first_name=Sam" \
 
 ## 🧠 LLM Integration
 
-The `test.js` script demonstrates how to send patient data to **Mistral AI**  
+The `test.js` script demonstrates how to send patient data to the **OpenAI API**  
 for automated medical summaries and treatment plans.
 
 **Command:**
@@ -347,30 +337,124 @@ It outputs a structured Markdown report with:
 | Column | Type | Required | Description |
 |--------|------|-----------|-------------|
 | `user_id` | INT AUTO_INCREMENT | ✅ | Primary key |
-| `prefix` | VARCHAR(20) | ❌ | e.g. Dr., Mr., Ms. |
-| `first_name` | VARCHAR(50) | ✅ | User’s first name |
-| `middle_name` | VARCHAR(50) | ❌ | Optional |
-| `last_name` | VARCHAR(50) | ✅ | User’s last name |
-| `email` | VARCHAR(100) | ✅ | Unique |
-| `password_hash` | VARCHAR(255) | ✅ | Bcrypt hash |
-| `role` | ENUM(...) | ✅ | admin, clinician, etc. |
+| `prefix` | VARCHAR(20) | ❌ | e.g. Dr., Prof., Ms. |
+| `first_name` | VARCHAR(100) | ✅ | User’s first name |
+| `middle_name` | VARCHAR(100) | ❌ | Optional |
+| `last_name` | VARCHAR(100) | ✅ | User’s last name |
+| `email` | VARCHAR(255) | ✅ | Unique user email |
+| `password_hash` | VARCHAR(255) | ✅ | Hashed password (bcrypt) |
+| `role` | ENUM('clinician','researcher','admin','patient') | ✅ | Application role |
+| `created_at` | TIMESTAMP | ✅ | Auto-generated creation timestamp |
+
+---
 
 ### `patients`
 | Column | Type | Required | Description |
 |--------|------|-----------|-------------|
 | `patient_id` | INT AUTO_INCREMENT | ✅ | Primary key |
-| `prefix` | VARCHAR(20) | ❌ | e.g. Mr., Ms. |
-| `first_name` | VARCHAR(50) | ✅ | Patient’s first name |
-| `middle_name` | VARCHAR(50) | ❌ | Optional |
-| `last_name` | VARCHAR(50) | ✅ | Patient’s last name |
+| `prefix` | VARCHAR(20) | ❌ | e.g. Mr., Ms., Dr. |
+| `first_name` | VARCHAR(100) | ✅ | Patient’s first name |
+| `middle_name` | VARCHAR(100) | ❌ | Optional |
+| `last_name` | VARCHAR(100) | ✅ | Patient’s last name |
 | `date_of_birth` | DATE | ❌ | Optional |
-| `sex` | VARCHAR(10) | ❌ | Optional |
-| `phone_number` | VARCHAR(20) | ❌ | Optional |
-| `address` | TEXT | ❌ | Optional |
-| `email` | VARCHAR(100) | ❌ | Optional |
+| `sex` | ENUM('M','F','Other') | ❌ | Optional |
+| `phone_number` | VARCHAR(50) | ❌ | Optional |
+| `address` | VARCHAR(255) | ❌ | Optional |
+| `email` | VARCHAR(255) | ❌ | Optional |
 | `emergency_contact_name` | VARCHAR(100) | ❌ | Optional |
-| `emergency_contact_phone` | VARCHAR(20) | ❌ | Optional |
+| `emergency_contact_phone` | VARCHAR(50) | ❌ | Optional |
 | `notes_text` | TEXT | ❌ | Optional |
+| `created_at` | TIMESTAMP | ✅ | Auto-generated creation timestamp |
+
+---
+
+### `ehr_inputs`
+| Column | Type | Required | Description |
+|--------|------|-----------|-------------|
+| `ehr_id` | INT AUTO_INCREMENT | ✅ | Primary key |
+| `patient_id` | INT | ✅ | Foreign key → `patients.patient_id` |
+| `author_user_id` | INT | ✅ | Foreign key → `users.user_id` |
+| `labs_json` | JSON | ❌ | Structured lab results |
+| `symptoms_json` | JSON | ❌ | Structured symptom data |
+| `history_text` | TEXT | ❌ | Free-text clinical history |
+| `created_at` | TIMESTAMP | ✅ | Auto-generated creation timestamp |
+
+---
+
+### `llm_reports`
+| Column | Type | Required | Description |
+|--------|------|-----------|-------------|
+| `report_id` | INT AUTO_INCREMENT | ✅ | Primary key |
+| `ehr_id` | INT | ✅ | Foreign key → `ehr_inputs.ehr_id` |
+| `task_type` | ENUM('diagnosis','treatment','literature','management') | ✅ | Report category |
+| `model_name` | VARCHAR(100) | ✅ | LLM model used (e.g. gpt-4o) |
+| `output_md` | MEDIUMTEXT | ✅ | Markdown-formatted output |
+| `citations_json` | JSON | ❌ | Optional structured references |
+| `created_at` | TIMESTAMP | ✅ | Auto-generated creation timestamp |
+
+---
+
+### `prompt_history`
+| Column | Type | Required | Description |
+|--------|------|-----------|-------------|
+| `prompt_id` | INT AUTO_INCREMENT | ✅ | Primary key |
+| `report_id` | INT | ✅ | Foreign key → `llm_reports.report_id` |
+| `prompt_text` | MEDIUMTEXT | ✅ | Prompt used for report generation |
+| `params_json` | JSON | ❌ | Temperature, model parameters, etc. |
+| `created_at` | TIMESTAMP | ✅ | Auto-generated creation timestamp |
+
+---
+
+### `feedback`
+| Column | Type | Required | Description |
+|--------|------|-----------|-------------|
+| `feedback_id` | INT AUTO_INCREMENT | ✅ | Primary key |
+| `report_id` | INT | ✅ | Foreign key → `llm_reports.report_id` |
+| `user_id` | INT | ✅ | Foreign key → `users.user_id` |
+| `stars` | TINYINT | ✅ | Rating between 1 and 5 |
+| `comment` | TEXT | ❌ | Optional feedback text |
+| `created_at` | TIMESTAMP | ✅ | Auto-generated creation timestamp |
+
+---
+
+### `literature_db`
+| Column | Type | Required | Description |
+|--------|------|-----------|-------------|
+| `doc_id` | INT AUTO_INCREMENT | ✅ | Primary key |
+| `source` | VARCHAR(50) | ✅ | e.g. PubMed, OMIM |
+| `title` | VARCHAR(512) | ✅ | Document title |
+| `url` | VARCHAR(2048) | ❌ | Reference link |
+| `abstract_txt` | MEDIUMTEXT | ❌ | Optional abstract |
+| `embedding_vec` | BLOB | ❌ | Optional vector embedding |
+| `created_at` | TIMESTAMP | ✅ | Auto-generated creation timestamp |
+
+---
+
+### `llm_flows`
+| Column | Type | Required | Description |
+|--------|------|-----------|-------------|
+| `flow_id` | CHAR(36) | ✅ | Primary key (UUID) |
+| `ehr_id` | INT | ✅ | Foreign key → `ehr_inputs.ehr_id` |
+| `model_name` | VARCHAR(64) | ❌ | Model used for reasoning |
+| `started_at` | TIMESTAMP | ✅ | Start time |
+| `finished_at` | TIMESTAMP | ❌ | End time |
+| `status` | ENUM('running','ok','error') | ❌ | Current flow status |
+
+---
+
+### `panel_turns`
+| Column | Type | Required | Description |
+|--------|------|-----------|-------------|
+| `turn_id` | INT AUTO_INCREMENT | ✅ | Primary key |
+| `flow_id` | CHAR(36) | ✅ | Foreign key → `llm_flows.flow_id` |
+| `step_index` | INT | ✅ | Step number in reasoning sequence |
+| `panel_json` | JSON | ✅ | Full panel output (5 personas) |
+| `action` | ENUM('ASK','ORDER','COMMIT') | ✅ | Panel consensus action |
+| `questions_json` | JSON | ❌ | Patient questions (if ASK) |
+| `orders_json` | JSON | ❌ | Test orders (if ORDER) |
+| `diagnosis_json` | JSON | ❌ | Diagnosis data (if COMMIT) |
+| `certainty` | DECIMAL(5,3) | ❌ | Consensus certainty (0–1) |
+| `created_at` | TIMESTAMP | ✅ | Auto-generated creation timestamp |
 
 ---
 

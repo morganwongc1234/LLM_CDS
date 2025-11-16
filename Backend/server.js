@@ -50,7 +50,7 @@ app.get('/api/health', (req, res) => res.send('✅ Server is healthy'));
 // --- Register user ---
 app.post('/register_user', async (req, res) => {
   const { prefix, first_name, middle_name, last_name, email, password, role } = req.body;
-  
+
   if (!email || !password || !first_name || !last_name || !role) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
