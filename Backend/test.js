@@ -1,12 +1,30 @@
 // test.js – generate a structured clinical report & treatment plan with Mistral
 import 'dotenv/config';
-import { Mistral } from '@mistralai/mistralai';
+import OpenAI from "openai";
 
-const apiKey = (process.env.MISTRAL_API_KEY || '').trim();
-console.log('Key length =', apiKey.length, 'starts with =', apiKey.slice(0, 6));
-if (!apiKey) throw new Error('Missing MISTRAL_API_KEY in .env');
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const client = new Mistral({ apiKey });
+async function main() {
+  const chatResponse = await client.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+  });
+
+  console.log(chatResponse.choices[0].message.content);
+}
+
+// import { Mistral } from '@mistralai/mistralai';
+
+// const apiKey = (process.env.MISTRAL_API_KEY || '').trim();
+// console.log('Key length =', apiKey.length, 'starts with =', apiKey.slice(0, 6));
+// if (!apiKey) throw new Error('Missing MISTRAL_API_KEY in .env');
+
+// const client = new Mistral({ apiKey });
+
+
 
 // ---- Demo patient case (replace with real EHR fields later) ----
 const patient = {
@@ -37,69 +55,65 @@ const patient = {
 
 // ---- Prompt design: system + user (structured Markdown output) ----
 const systemPrompt = `
-You are a careful, evidence-aware clinical decision support assistant.
-Produce a concise, structured Markdown report using the following headings exactly:
-1) Summary
-2) Differential diagnosis
-3) Most likely diagnosis (with justification)
-4) Red flags / when to escalate
-5) Investigations (only if needed)
-6) Management plan (non-pharmacological & pharmacological)
-7) Patient education & safety-netting
-8) References (short, credible)
+You are an AI clinical decision support assistant for Australian general practice.
 
-Rules:
-- Be specific to the patient data provided. Do not hallucinate unavailable results.
-- If information is insufficient, state what is missing and how it changes certainty.
-- Use Australian primary-care context if locale=AU (drug names, dosing ranges, PBS availability when relevant).
-- Respect allergies and constraints.
-- Keep within 350–550 words. Use bullet lists where clearer.
+Task:
+Generate a concise, structured clinical report and initial management plan based on the provided patient data.
+
+Structure the response under these exact Markdown headings:
+1. ## Summary
+2. ## Differential diagnoses
+3. ## Most likely diagnosis (with justification)
+4. ## Red flags / criteria for escalation or referral
+5. ## Recommended investigations (if indicated)
+6. ## Management plan (non-pharmacological & pharmacological)
+7. ## Patient education & safety-netting
+8. ## References (Australian and credible)
+
+Guidelines and standards:
+- Apply RACGP, Therapeutic Guidelines (Australia), Australian Medicines Handbook, and HealthPathways.
+- Include brief, evidence-based reasoning with in-text references such as:
+  - "According to RACGP Asthma Handbook (2023)..."
+  - "Per Australian Therapeutic Guidelines, antibiotic use is not recommended unless..."
+- Use Australian English and metric units.
+- Mention PBS-listed medicines and typical local dosing ranges when relevant.
+- If information is missing, clearly state assumptions or uncertainty.
+- Never fabricate results or imply diagnostic certainty.
+- Prioritise clarity, brevity, and evidence-based reasoning.
+- Keep total length between 350–550 words.
+
+Output formatting:
+- Use Markdown headings exactly as listed.
+- Use bullet points for management recommendations and patient education.
+- Append a confidence rating (High / Moderate / Low) at the end of the Summary section.
 `;
 
 const userPrompt = `
-PATIENT
--------
-Name: ${patient.prefix ? patient.prefix + ' ' : ''}${patient.first_name} ${patient.last_name} (DOB ${patient.dob}, Sex ${patient.sex})
-Height/Weight: ${patient.height_cm} cm / ${patient.weight_kg} kg
-Vitals: T ${patient.vitals.temp_c}°C, HR ${patient.vitals.hr}/min, BP ${patient.vitals.bp}, RR ${patient.vitals.rr}/min, SpO2 ${patient.vitals.spo2}%
-Allergies: ${patient.allergies.join('; ') || 'none recorded'}
-Current meds: ${patient.meds.join('; ') || 'none recorded'}
-PMH: ${patient.pmh.join('; ') || '—'}
-FHx: ${patient.fhx.join('; ') || '—'}
-SHx: ${patient.shx.join('; ') || '—'}
-
-PRESENTATION
-------------
-Chief complaint: ${patient.chief_complaint}
-HPI: ${patient.history_of_present_illness}
-Examination: ${patient.exam.join('; ') || '—'}
-Labs: CRP ${patient.labs.CRP_mg_L} mg/L; WBC ${patient.labs.WBC_10e9_L} ×10^9/L; Eos ${patient.labs.eos_10e9_L} ×10^9/L
-Imaging: ${patient.imaging.join('; ') || '—'}
-Red flags denied: ${patient.red_flags_denied.join('; ') || '—'}
-
-GOALS & CONSTRAINTS
---------------------
-Patient goals: ${patient.goals.join('; ')}
-Constraints: ${patient.constraints.join('; ')}
-Locale: ${patient.locale}
+PATIENT DATA (JSON, STRICT)
+---------------------------
+${JSON.stringify(patient, null, 2)}
 
 TASK
 ----
-Generate the report and an initial treatment plan according to the rules.
+Validate that the input JSON is complete. If fields appear missing, mention which ones are absent before analysis.
+
+INSTRUCTIONS
+------------
+Follow the system prompt. Generate the report using the exact Markdown headings.
 `;
 
 try {
-  const chatResponse = await client.chat.complete({
-    model: 'mistral-small-latest',      // smaller model for dev; upgrade later if needed
+  const chatResponse = await client.chat.completions.create({
+    model: 'gpt-4o',
+    temperature: 0.2, // test 0.1
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    // temperature: 0.2, // uncomment if the SDK supports it; default is fine for now
   });
 
   console.log('\n===== CLINICAL REPORT (Markdown) =====\n');
   console.log(chatResponse.choices[0].message.content);
 } catch (e) {
-  console.error('Mistral error:', e);
+  console.error('OpenAI Error:', e);
 }
