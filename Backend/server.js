@@ -156,58 +156,97 @@ app.get('/patients', authMiddleware, async (req, res) => {
     const [rows] = await pool.execute('SELECT * FROM patients ORDER BY patient_id DESC');
     res.json(rows);
   } catch (err) {
+    // ✨ ADDED LOGGING
+    console.error('Error in GET /patients:', err);
     res.status(500).json({ error: 'Database error', detail: err.message });
   }
 });
 
 app.post('/patients', authMiddleware, async (req, res) => {
+  // 1. UPDATE DESTRUCTURING to default to 'null'
+  // This prevents 'undefined' errors
   const {
-    prefix, first_name, middle_name, last_name, dob, sex, phone,
-    address, email, emergency_name, emergency_phone, notes
+    prefix = null,
+    first_name = null,
+    middle_name = null,
+    last_name = null,
+    date_of_birth = null,
+    sex = null,
+    phone_number = null,
+    address = null,
+    email = null,
+    emergency_contact_name = null,
+    emergency_contact_phone = null,
+    notes_text = null
   } = req.body;
+
+  // 2. Your validation remains (first_name and last_name are required)
   if (!first_name || !last_name)
     return res.status(400).json({ error: 'first_name and last_name required' });
+
   try {
+    // This SQL and params array are now safe
     const [r] = await pool.execute(
-      `INSERT INTO patients (prefix, first_name, middle_name, last_name, dob, sex, phone,
-                             address, email, emergency_name, emergency_phone, notes)
+      `INSERT INTO patients (prefix, first_name, middle_name, last_name, 
+                             date_of_birth, sex, phone_number,
+                             address, email, emergency_contact_name, 
+                             emergency_contact_phone, notes_text)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [prefix, first_name, middle_name, last_name, dob, sex, phone,
-       address, email, emergency_name, emergency_phone, notes]
+      [prefix, first_name, middle_name, last_name,
+       date_of_birth, sex, phone_number,
+       address, email, emergency_contact_name,
+       emergency_contact_phone, notes_text]
     );
+
     res.status(201).json({ status: 'ok', patient_id: r.insertId });
+
   } catch (err) {
+    console.error('Error in POST /patients:', err);
     res.status(500).json({ error: 'Database error', detail: err.message });
   }
 });
 
 // --- Search patients ---
 app.get('/patients/search', authMiddleware, async (req, res) => {
-  const { last_name, first_name, dob } = req.query;
+  // 1. Read 'date_of_birth' from the query (or 'dob' if you prefer, but be consistent)
+  const { last_name, first_name, date_of_birth } = req.query;
+
   if (!last_name) return res.status(400).json({ error: 'last_name required' });
+
   try {
     const conditions = ['last_name LIKE ?'];
     const params = [`%${last_name}%`];
-    if (first_name) { conditions.push('first_name LIKE ?'); params.push(`%${first_name}%`); }
-    if (dob) { conditions.push('dob = ?'); params.push(dob); }
+
+    if (first_name) {
+      conditions.push('first_name LIKE ?');
+      params.push(`%${first_name}%`);
+    }
+    
+    // 2. Check for 'date_of_birth' and use the correct column name in the SQL
+    if (date_of_birth) {
+      conditions.push('date_of_birth = ?'); // <-- CORRECTED COLUMN NAME
+      params.push(date_of_birth);
+    }
+    
     const [rows] = await pool.execute(
       `SELECT * FROM patients WHERE ${conditions.join(' AND ')}`,
       params
     );
     res.json(rows);
   } catch (err) {
+    console.error('Error in GET /patients/search:', err);
     res.status(500).json({ error: 'Database error', detail: err.message });
   }
 });
 
-// --- Reports (placeholder for LLM integration) ---
-app.post('/reports/generate', authMiddleware, async (req, res) => {
-  const { patient_id, user_prompt } = req.body;
-  if (!patient_id || !user_prompt)
-    return res.status(400).json({ error: 'Missing required fields' });
-  // TODO: integrate Mistral API (test2.js logic)
-  res.json({ message: 'LLM generation placeholder', patient_id, user_prompt });
-});
+// // --- Reports (placeholder for LLM integration) ---
+// app.post('/reports/generate', authMiddleware, async (req, res) => {
+//   const { patient_id, user_prompt } = req.body;
+//   if (!patient_id || !user_prompt)
+//     return res.status(400).json({ error: 'Missing required fields' });
+//   // TODO: integrate Mistral API (test2.js logic)
+//   res.json({ message: 'LLM generation placeholder', patient_id, user_prompt });
+// });
 
 // --- Fallback (Frontend index) ---
 app.use((req, res) => {
