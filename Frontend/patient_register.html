@@ -17,85 +17,134 @@
       <div class="form-wrapper">
         <legend>Register New Patient</legend>
 
-        <!-- Row for name fields -->
+        <!-- Name Fields Row -->
         <div class="row nameRow">
           <div class="col prefix">
-            <label>Prefix</label>
-            <select id="patPrefix">
-              <option value=""></option>
+            <label>Prefix *</label>
+            <select id="patPrefix" required>
+              <option value="">Select</option>
               <option>Mr.</option>
               <option>Ms.</option>
               <option>Mrs.</option>
               <option>Dr.</option>
             </select>
+            <small class="field-error" id="errPrefix"></small>
           </div>
           <div class="col">
             <label>First name *</label>
-            <input id="patFirst" placeholder="First name" />
+            <input id="patFirst" placeholder="First name" required />
+            <small class="field-error" id="errFirst"></small>
           </div>
           <div class="col">
             <label>Middle name</label>
             <input id="patMiddle" placeholder="Middle name (optional)" />
+            <small class="field-error" id="errMiddle"></small>
           </div>
           <div class="col">
             <label>Last name *</label>
-            <input id="patLast" placeholder="Last name" />
+            <input id="patLast" placeholder="Last name" required />
+            <small class="field-error" id="errLast"></small>
           </div>
         </div>
 
-        <!-- Each of the remaining fields in its own row -->
-
-      <div class ="row DOBSexRow">
-        <div class="col sex">
-          <label>Sex</label>
-          <select id="patSex">
-            <option value=""></option>
-            <option>M</option>
-            <option>F</option>
-            <option>Other</option>
-          </select>
+        <!-- DOB & Sex Row -->
+        <div class="row dobSexRow">
+          <div class="col">
+            <label>Date of Birth *</label>
+            <input id="patDOB" type="date" required />
+            <small class="field-error" id="errDOB"></small>
+          </div>
+          <div class="col sex">
+            <label>Sex *</label>
+            <select id="patSex" required>
+              <option value="">Select</option>
+              <option>M</option>
+              <option>F</option>
+              <option>Other</option>
+            </select>
+            <small class="field-error" id="errSex"></small>
+          </div>
         </div>
 
-        <div class="col">
-          <label>Date of birth</label>
-          <input id="patDOB" type="date" />
-        </div>
-      </div>
-    
-      <div class="row contactRow">
-        <div class="col">
-          <label>Phone</label>
-          <input id="patPhone" placeholder="0412 345 678" />
-        </div>
-
-        <div class="col">
-          <label>Email</label>
-          <input id="patEmail" type="email" placeholder="example@email.org" />
-        </div>
-      </div>
-  
-        <div class="row">
-          <label>Home Address</label>
-          <input id="patAddress" placeholder="Home Address" />
+        <!-- Contact Info Row -->
+        <div class="row contactRow">
+          <div class="col">
+            <label>Phone *</label>
+            <input id="patPhone" placeholder="0412 345 678" required />
+            <small class="field-error" id="errPhone"></small>
+          </div>
+          <div class="col">
+            <label>Email *</label>
+            <input id="patEmail" type="email" placeholder="example@email.org" required />
+            <small class="field-error" id="errEmail"></small>
+          </div>
         </div>
 
-        <div class="row">
-          <label>Emergency contact name</label>
-          <input id="patEmergencyName" placeholder="Emergency contact name" />
-        </div>
+        <!-- Address Fields -->
+        <label>Address Line 1 *</label>
+        <input id="patAddressLine1" placeholder="e.g. 24 Example Street" required />
+        <small class="field-error" id="errAddress1"></small>
 
-        <div class="row">
-          <label>Emergency contact phone</label>
-          <input id="patEmergencyPhone" placeholder="0412 345 678" />
-        </div>
+        <label>Address Line 2</label>
+        <input id="patAddressLine2" placeholder="e.g. Unit 5 (optional)" />
+        <small class="field-error" id="errAddress2"></small>
 
         <div class="row">
-          <label>Notes</label>
-          <textarea id="patNotes" rows="3" placeholder="Notes (optional)"></textarea>
+          <div class="col">
+            <label>Suburb *</label>
+            <input id="patSuburb" placeholder="e.g. Hornsby" required />
+            <small class="field-error" id="errSuburb"></small>
+          </div>
+
+          <div class="col">
+            <label>City *</label>
+            <input id="patCity" placeholder="e.g. Sydney" required />
+            <small class="field-error" id="errCity"></small>
+          </div>
+
+          <div class="col">
+            <label>State *</label>
+            <select id="patState">
+              <option value="">Select</option>
+              <option value="NSW">New South Wales</option>
+              <option value="VIC">Victoria</option>
+              <option value="QLD">Queensland</option>
+              <option value="WA">Western Australia</option>
+              <option value="SA">South Australia</option>
+              <option value="TAS">Tasmania</option>
+              <option value="ACT">Australian Capital Territory</option>
+              <option value="NT">Northern Territory</option>
+            </select>
+            <small class="field-error" id="errState"></small>
+          </div>
+
+          <div class="col">
+            <label>Postcode *</label>
+            <input id="patPostcode" placeholder="e.g. 2000" required />
+            <small class="field-error" id="errPostcode"></small>
+          </div>
         </div>
+
+        <!-- Emergency Contact Row -->
+        <div class="row emergencyRow">
+          <div class="col">
+            <label>Emergency Contact Full Name *</label>
+            <input id="patEmergencyName" placeholder="Full Name" required />
+            <small class="field-error" id="errEmergencyName"></small>
+          </div>
+          <div class="col">
+            <label>Emergency Contact Phone *</label>
+            <input id="patEmergencyPhone" placeholder="0412 345 678" required />
+            <small class="field-error" id="errEmergencyPhone"></small>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <label>Notes</label>
+        <textarea id="patNotes" rows="5" placeholder="Notes (optional)"></textarea>
 
         <!-- Submit -->
-        <div class="row">
+        <div class="col">
           <button id="btnCreatePatient" class="primary">Create Patient</button>
         </div>
 

@@ -1,31 +1,23 @@
 
 
 .rowName input {
-    width: 150px;
-    margin: 0;
-}
-
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+  width: 150px;
+  margin: 0;
 }
 
 .container {
   grid-template-columns: 1fr;
+  width: 85%;
 }
 
 .form-wrapper {
   width: 90%;
 }
 
-.prefix, .sex {
-  max-width: 100px;
-}
-
 .col {
   flex: 1 1 0; /* grow, shrink, start at 0 width */
   min-width: 0; /* ensures text truncates instead of overflowing */
+  max-width: 300px;
 }
 
 input {
@@ -34,19 +26,40 @@ input {
   margin-left: 0;
 }
 
+#patAddressLine1, #patAddressLine2 {
+  max-width: none !important;
+}
+
+textarea {
+  width: 90%;
+  margin-left: 0;
+  min-height: 200px;
+}
+
 #patEmail {
   max-width: 350px;
 }
 
+#patAddress {
+  max-width: 500px;
+}
 
-/* 
-.nameRow input, 
-.DOBSexRow input,
-.contactRow input {
-  width: 90%;
+.prefix, .sex{
+  margin-right: 40px;
+  max-width: 150px !important;
+}
+
+#patSex, #patPrefix {
+  max-width: 100px !important;
   margin-left: 0;
-} */
+}
 
+.dobSexRow .col, 
+.contactRow .col,
+.emergencyRow .col {
+  flex: 0 0 50%;
+  max-width: 45%;
+}
 
 
 .registerPatientsForm {
