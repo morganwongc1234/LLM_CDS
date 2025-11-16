@@ -225,7 +225,8 @@ legend {
   /* grid-template-columns: 1fr 1fr; */
   gap: 0;
   margin: 3rem auto;
-  max-width: 1200px;
+  width: 80%;
+  height: auto;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 1.5rem;

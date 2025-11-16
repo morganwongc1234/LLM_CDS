@@ -1,11 +1,11 @@
 input {
-    /* margin: 0; */
-    width: 95%;
+  /* margin: 0; */
+  width: 90%;
 }
 
 .rowName input {
-    width: 150px;
-    margin: 0;
+  width: 150px;
+  margin: 0;
 }
 
 .row {
@@ -21,6 +21,7 @@ input {
 
 .container {
   grid-template-columns: 1fr;
+  width: 95%;
 }
 
 .form-wrapper {
