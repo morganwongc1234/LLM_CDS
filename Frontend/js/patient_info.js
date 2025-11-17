@@ -1,75 +1,105 @@
-// js/patient_info.js
-import { apiGet, initHeader, requireAuthGuard } from './common.js';
+import {
+  apiGet,
+  initHeader,
+  requireAuthGuard,
+  formatDate // We get this from common.js
+} from './common.js';
 
-function $(sel) { return document.querySelector(sel); }
+const $ = (sel) => document.querySelector(sel);
 
-document.addEventListener('DOMContentLoaded', async () => {
+// ✨ UPDATED: This function now renders a table
+function renderPatientDetail(patient) {
+  // Selects the <section> from your patient_info.html
+  const container = $('#patientInfo'); 
+  if (!container) return;
+
+  // Render the patient data as a table
+  container.innerHTML = `
+    <h2>${[patient.prefix, patient.first_name, patient.last_name].filter(Boolean).join(' ')}</h2>
+    
+    <table class="table">
+      <tbody>
+        <tr>
+          <td><strong>Patient ID:</strong></td>
+          <td>${patient.patient_id}</td>
+        </tr>
+        <tr>
+          <td><strong>Full Name:</strong></td>
+          <td>${[patient.prefix, patient.first_name, patient.middle_name, patient.last_name].filter(Boolean).join(' ')}</td>
+        </tr>
+        <tr>
+          <td><strong>Date of Birth:</strong></td>
+          <td>${formatDate(patient.date_of_birth)}</td>
+        </tr>
+        <tr>
+          <td><strong>Sex:</strong></td>
+          <td>${patient.sex ?? 'N/A'}</td>
+        </tr>
+        <tr>
+          <td><strong>Phone:</strong></td>
+          <td>${patient.phone_number ?? 'N/A'}</td>
+        </tr>
+        <tr>
+          <td><strong>Email:</strong></td>
+          <td>${patient.email ?? 'N/A'}</td>
+        </tr>
+        <tr>
+          <td><strong>Address:</strong></td>
+          <td>${patient.address ?? 'N/A'}</td>
+        </tr>
+        <tr>
+          <td><strong>Emergency Contact:</strong></td>
+          <td>${patient.emergency_contact_name ?? 'N/A'}</td>
+        </tr>
+        <tr>
+          <td><strong>Emergency Phone:</strong></td>
+          <td>${patient.emergency_contact_phone ?? 'N/A'}</td>
+        </tr>
+        <tr>
+          <td><strong>Notes:</strong></td>
+          <td>
+            <pre style="margin: 0; white-space: pre-wrap; font-family: inherit;">${patient.notes_text ?? 'No notes.'}</pre>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  `;
+}
+
+// This function will run when the page loads
+async function initPage() {
   await initHeader();
   if (!requireAuthGuard()) return;
 
-  const patientId = getPatientIdFromURL();
-  if (!patientId) return showError('No patient ID provided in URL.');
+  const container = $('#patientInfo'); // Matches your HTML
 
+  // 1. Get the patient ID from the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const patientId = urlParams.get('id');
+
+  if (!patientId) {
+    container.innerHTML = '<p class="error">Error: No patient ID found in URL.</p>';
+    return;
+  }
+
+  // 2. Fetch the data from our new API endpoint
   try {
-    const user = await fetchCurrentUser();
-    const role = user?.role;
-    if (!role) return showError('Missing user role.');
+    // This calls the /patients/:id route we made in server.js
+    const r = await apiGet(`/patients/${patientId}`);
+    const data = await r.json();
 
-    const r = await apiGet(`/api/patient/${patientId}`);
-    if (!r.ok) return showError(`Could not load patient (HTTP ${r.status})`);
+    if (!r.ok) {
+      container.innerHTML = `<p class="error">Error: ${data.error || 'Could not fetch patient data.'}</p>`;
+      return;
+    }
 
-    const patient = await r.json();
-    renderPatientInfo(patient, role);
+    // 3. Render the data
+    renderPatientDetail(data);
+
   } catch (err) {
-    showError(`Unexpected error: ${err.message}`);
+    console.error('Fetch error:', err);
+    container.innerHTML = '<p class="error">A network error occurred.</p>';
   }
-});
-
-function getPatientIdFromURL() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get('id');
 }
 
-async function fetchCurrentUser() {
-  const r = await apiGet('/me');
-  if (!r.ok) return null;
-  const data = await r.json();
-  return data?.me || null;
-}
-
-function renderPatientInfo(p, role) {
-  const infoEl = $('#patientDetails');
-  if (!infoEl) return;
-
-  const safe = (val) => val ?? '—';
-
-  const fields = [];
-
-  fields.push(`<h2>${safe(p.first_name)} ${safe(p.last_name)}</h2>`);
-
-  if (['clinician', 'admin', 'researcher'].includes(role)) {
-    fields.push(`<p><strong>DOB:</strong> ${safe(p.date_of_birth)}</p>`);
-    fields.push(`<p><strong>Sex:</strong> ${safe(p.sex)}</p>`);
-  }
-
-  if (['clinician', 'admin'].includes(role)) {
-    fields.push(`<p><strong>Phone:</strong> ${safe(p.phone_number)}</p>`);
-    fields.push(`<p><strong>Address:</strong> ${safe(p.address)}</p>`);
-    fields.push(`<p><strong>Email:</strong> ${safe(p.email)}</p>`);
-    fields.push(`<p><strong>Emergency Contact:</strong> ${safe(p.emergency_contact_name)} (${safe(p.emergency_contact_phone)})</p>`);
-    fields.push(`<p><strong>Notes:</strong><br><em>${safe(p.notes_text)}</em></p>`);
-  }
-
-  if (role === 'patient') {
-    // Only show non-sensitive personal info
-    fields.push(`<p><strong>DOB:</strong> ${safe(p.date_of_birth)}</p>`);
-    fields.push(`<p><strong>Sex:</strong> ${safe(p.sex)}</p>`);
-  }
-
-  infoEl.innerHTML = fields.join('\n');
-}
-
-function showError(msg) {
-  const el = $('#patientDetails');
-  if (el) el.innerHTML = `<p class="error">${msg}</p>`;
-}
+document.addEventListener('DOMContentLoaded', initPage);

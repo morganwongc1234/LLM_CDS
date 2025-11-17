@@ -4,21 +4,11 @@ import {
   initHeader,
   requireAuthGuard,
   setError,
-  clearError
+  clearError,
+  formatDate
 } from './common.js';
 
 const $ = (sel) => document.querySelector(sel);
-
-// ✨ ADD THIS HELPER FUNCTION
-function formatDate(dateString) {
-  if (!dateString) {
-    return '';
-  }
-  // This avoids timezone issues by just splitting the string
-  const datePart = dateString.split('T')[0]; // -> "2003-12-11"
-  const [year, month, day] = datePart.split('-');
-  return `${day}/${month}/${year}`; // -> "11/12/2003"
-}
 
 // ---------------- Render Patients Table ----------------
 function renderPatients(data) {
@@ -30,12 +20,13 @@ function renderPatients(data) {
   }
 
   const rows = data.map(p => `
-    <tr>
+    <tr 
+      class="clickable-row" 
+      onclick="window.location.href='patient_info.html?id=${p.patient_id}'"
+    >
       <td>${p.patient_id}</td>
       <td>${[p.prefix, p.first_name, p.middle_name, p.last_name].filter(Boolean).join(' ')}</td>
-      
       <td>${formatDate(p.date_of_birth)}</td>
-      
       <td>${p.sex ?? ''}</td>
       <td>${p.phone_number ?? ''}</td>
       <td>${p.email ?? ''}</td>

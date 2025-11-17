@@ -193,3 +193,14 @@ export function clearError(inputSel, errorSel = null) {
   if (inputEl) inputEl.classList.remove('error');
   if (errorEl) errorEl.textContent = '';
 }
+
+// ------- Helper Functions -------
+export function formatDate(dateString) {
+  if (!dateString) {
+    return '';
+  }
+  // This avoids timezone issues by just splitting the string
+  const datePart = dateString.split('T')[0]; // -> "2003-12-11"
+  const [year, month, day] = datePart.split('-');
+  return `${day}/${month}/${year}`; // -> "11/12/2003"
+}

@@ -239,6 +239,33 @@ app.get('/patients/search', authMiddleware, async (req, res) => {
   }
 });
 
+// --- Get single patient by ID ---
+app.get('/patients/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  
+  // Check if ID is a valid number
+  if (isNaN(Number(id))) {
+    return res.status(400).json({ error: 'Invalid patient ID format' });
+  }
+
+  try {
+    const [rows] = await pool.execute(
+      'SELECT * FROM patients WHERE patient_id = ?',
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    res.json(rows[0]); // Send back the single patient object
+
+  } catch (err) {
+    console.error(`Error in GET /patients/${id}:`, err);
+    res.status(500).json({ error: 'Database error', detail: err.message });
+  }
+});
+
 // // --- Reports (placeholder for LLM integration) ---
 // app.post('/reports/generate', authMiddleware, async (req, res) => {
 //   const { patient_id, user_prompt } = req.body;
