@@ -8,6 +8,7 @@ import morgan from 'morgan';
 import jwt from 'jsonwebtoken';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -162,9 +163,10 @@ app.get('/patients', authMiddleware, async (req, res) => {
   }
 });
 
+// --- REPLACE your existing app.post('/patients') route with this ---
+
 app.post('/patients', authMiddleware, async (req, res) => {
-  // 1. UPDATE DESTRUCTURING to default to 'null'
-  // This prevents 'undefined' errors
+  // 1. Get all data from the request body
   const {
     prefix = null,
     first_name = null,
@@ -174,57 +176,106 @@ app.post('/patients', authMiddleware, async (req, res) => {
     sex = null,
     phone_number = null,
     address = null,
-    email = null,
+    email = null, // This will be the new user's email
     emergency_contact_name = null,
     emergency_contact_phone = null,
     notes_text = null
   } = req.body;
 
-  // 2. Your validation remains (first_name and last_name are required)
+  // 2. Validation
   if (!first_name || !last_name)
     return res.status(400).json({ error: 'first_name and last_name required' });
+  if (!email)
+    return res.status(400).json({ error: 'Email is required to create a patient user account' });
 
+  // 3. Generate a secure random password (e.g., 'a4b2c8f1')
+  const randomPassword = crypto.randomBytes(4).toString('hex');
+  const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+  // 4. We must use a transaction to create two records at once.
+  let connection;
   try {
-    // This SQL and params array are now safe
-    const [r] = await pool.execute(
-      `INSERT INTO patients (prefix, first_name, middle_name, last_name, 
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // 5. Create the new User first, with role 'patient'
+    const [userResult] = await connection.execute(
+      `INSERT INTO users (prefix, first_name, middle_name, last_name, email, password_hash, role)
+       VALUES (?, ?, ?, ?, ?, ?, 'patient')`,
+      [prefix, first_name, middle_name, last_name, email, hashedPassword]
+    );
+    
+    const newUserId = userResult.insertId;
+
+    // 6. ✨ THIS IS THE FIX ✨
+    // Now, create the Patient record and link it to the new user_id
+    const [patientResult] = await connection.execute(
+      `INSERT INTO patients (user_id, prefix, first_name, middle_name, last_name, 
                              date_of_birth, sex, phone_number,
                              address, email, emergency_contact_name, 
                              emergency_contact_phone, notes_text)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [prefix, first_name, middle_name, last_name,
-       date_of_birth, sex, phone_number,
-       address, email, emergency_contact_name,
-       emergency_contact_phone, notes_text]
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, // <-- 13 placeholders
+      [
+        newUserId, // <-- This is the new linked ID
+        prefix, first_name, middle_name, last_name,
+        date_of_birth, sex, phone_number,
+        address, email, emergency_contact_name,
+        emergency_contact_phone, notes_text
+      ]
     );
 
-    res.status(201).json({ status: 'ok', patient_id: r.insertId });
+    // 7. If both inserts succeed, commit the transaction
+    await connection.commit();
+
+    // 8. Return success and the temporary password
+    res.status(201).json({
+      status: 'ok',
+      patient_id: patientResult.insertId,
+      user_id: newUserId,
+      email: email,
+      temp_password: randomPassword // So the clinician can give it to the patient
+    });
 
   } catch (err) {
-    console.error('Error in POST /patients:', err);
-    res.status(500).json({ error: 'Database error', detail: err.message });
+    // If anything fails, roll back all changes
+    if (connection) await connection.rollback();
+
+    // Handle specific errors
+    if (err.code === 'ER_DUP_ENTRY') {
+      if (err.message.includes('users.email')) {
+        return res.status(400).json({ error: 'This email is already registered to a user.' });
+      }
+      if (err.message.includes('patients.user_id')) {
+         return res.status(400).json({ error: 'This user is already linked to a patient profile.' });
+      }
+    }
+
+    console.error('Error in POST /patients (transaction):', err);
+    res.status(500).json({ error: 'Database error during transaction', detail: err.message });
+  
+  } finally {
+    // Always release the connection back to the pool
+    if (connection) connection.release();
   }
 });
 
 // --- Search patients ---
 app.get('/patients/search', authMiddleware, async (req, res) => {
-  // 1. Read 'date_of_birth' from the query (or 'dob' if you prefer, but be consistent)
   const { last_name, first_name, date_of_birth } = req.query;
 
   if (!last_name) return res.status(400).json({ error: 'last_name required' });
 
   try {
     const conditions = ['last_name LIKE ?'];
-    const params = [`%${last_name}%`];
+    const params = [`${last_name}%`];
 
     if (first_name) {
       conditions.push('first_name LIKE ?');
-      params.push(`%${first_name}%`);
+      params.push(`${first_name}%`);
     }
     
-    // 2. Check for 'date_of_birth' and use the correct column name in the SQL
     if (date_of_birth) {
-      conditions.push('date_of_birth = ?'); // <-- CORRECTED COLUMN NAME
+      conditions.push('date_of_birth = ?');
       params.push(date_of_birth);
     }
     

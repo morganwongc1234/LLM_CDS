@@ -38,6 +38,7 @@ function prefixToRoot() {
 }
 
 // ------- Main Nav rendering (with Patients dropdown) -------
+// ------- Main Nav rendering (with Patients dropdown) -------
 export function renderMainNav(containerEl, user) {
   if (!containerEl) return;
 
@@ -56,7 +57,9 @@ export function renderMainNav(containerEl, user) {
     dashboardHref = `${pre}homepage/patient.html`;
   }
 
-  const patientsDropdown = `
+  // Conditionally create links based on role
+  const patientsDropdown = (role !== 'patient')
+    ? `
     <div class="dropdown">
       <button class="dropbtn" type="button" style="font-weight:700;">
         Patients 
@@ -66,7 +69,16 @@ export function renderMainNav(containerEl, user) {
         <a href="${pre}patient_register.html" role="menuitem">Register Patient</a>
       </div>
     </div>
-  `;
+  `
+    : '';
+
+  const reportsLink = (role !== 'patient')
+    ? `<a href="${pre}reports.html">Reports</a>`
+    : '';
+
+  const analyticsLink = (role !== 'patient')
+    ? `<a href="${pre}analytics.html">Analytics</a>`
+    : '';
 
   // Left: if authed -> full; else minimal
   const left = isAuthed
@@ -74,8 +86,8 @@ export function renderMainNav(containerEl, user) {
       <a href="${pre}index.html">Home</a>
       <a href="${dashboardHref}">Dashboard</a>
       ${patientsDropdown}
-      <a href="${pre}reports.html">Reports</a>
-      <a href="${pre}analytics.html">Analytics</a>
+      ${reportsLink}
+      ${analyticsLink}
     `
     : `
       <a href="${pre}index.html">Home</a>
