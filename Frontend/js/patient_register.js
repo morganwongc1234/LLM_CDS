@@ -190,7 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // === Submit Handler ===
   btnCreate.addEventListener("click", async () => {
-    outEl.textContent = "";
+    outEl.innerHTML = ""; // Use innerHTML so we can style the output
 
     // Validate all fields
     let valid =
@@ -210,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
       validatePhone(emergPhoneEl, err.emergPhone);
 
     if (!valid) {
-      outEl.textContent = "❌ Please correct the errors before submitting.";
+      outEl.innerHTML = "❌ Please correct the errors before submitting.";
       return;
     }
 
@@ -220,28 +220,66 @@ document.addEventListener("DOMContentLoaded", () => {
       const r = await apiPost("/patients", {
         prefix: prefixEl.value,
         first_name: firstEl.value.trim(),
-        middle_name: middleEl.value.trim(), // Can be ""
+        middle_name: middleEl.value.trim() || null,
         last_name: lastEl.value.trim(),
-        date_of_birth: dobEl.value, // ✅ Must be 'date_of_birth'
+        date_of_birth: dobEl.value,
         sex: sexEl.value,
-        phone_number: phoneEl.value.trim(), // ✅ Must be 'phone_number'
-        email: emailEl.value.trim(),
+        phone_number: phoneEl.value.trim(),
+        email: emailEl.value.trim(), // This is now used for the user account
         address: finalAddress,
-        emergency_contact_name: emergNameEl.value.trim(), // ✅
-        emergency_contact_phone: emergPhoneEl.value.trim(), // ✅
-        notes_text: notesEl.value.trim(), // ✅
+        emergency_contact_name: emergNameEl.value.trim(),
+        emergency_contact_phone: emergPhoneEl.value.trim(),
+        notes_text: notesEl.value.trim(),
       });
 
       const data = await r.json();
 
       if (!r.ok) {
-        outEl.textContent = "❌ Error: " + (data.error || data.detail);
+        // Use innerHTML to render error text
+        outEl.innerHTML = `❌ Error: ${data.error || data.detail}`;
         return;
       }
 
-      outEl.textContent = "✅ Patient created successfully!";
+      // Check for the email and temp_password in the successful response
+      if (data.email && data.temp_password) {
+        outEl.innerHTML = `
+          <div class="success-message">
+            <strong>✅ Patient and User Account created!</strong>
+            <p>Please give these login details to the patient:</p>
+            <div class="login-details-box">
+              <strong>Email:</strong> ${data.email}<br>
+              <strong>Password:</strong> <span class="temp-password">${data.temp_password}</span>
+            </div>
+          </div>
+        `;
+        
+        // Clear form after success
+        prefixEl.value = "";
+        firstEl.value = "";
+        middleEl.value = "";
+        lastEl.value = "";
+        dobEl.value = "";
+        sexEl.value = "";
+        phoneEl.value = "";
+        emailEl.value = "";
+        addr1El.value = "";
+        addr2El.value = "";
+        suburbEl.value = "";
+        cityEl.value = "";
+        stateEl.value = "";
+        postEl.value = "";
+        emergNameEl.value = "";
+        emergPhoneEl.value = "";
+        notesEl.value = "";
+        
+      } else {
+        // Fallback if something went wrong but didn't error
+        outEl.innerHTML = "✅ Patient created, but user details were not returned.";
+      }
+
     } catch (err) {
-      outEl.textContent = "❌ Network error.";
+      outEl.innerHTML = "❌ A network error occurred. Please try again.";
+      console.error('Create patient error:', err);
     }
   });
 });

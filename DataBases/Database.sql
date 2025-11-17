@@ -29,6 +29,7 @@ CREATE TABLE users (
 --    Includes structured name fields + demographics/contact.
 CREATE TABLE patients (
   patient_id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NULL UNIQUE, -- <-- This is the new linked User ID
   prefix VARCHAR(20) NULL,
   -- e.g. Mr., Ms., Dr.
   first_name VARCHAR(100) NOT NULL,
@@ -44,7 +45,11 @@ CREATE TABLE patients (
   notes_text TEXT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_patient_name (last_name, first_name),
-  INDEX idx_patient_email (email)
+  INDEX idx_patient_email (email),
+  -- This is the new constraint that links the tables
+  CONSTRAINT fk_patient_user
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE = InnoDB;
 -- 3) EHR inputs
 --    Structured/unstructured inputs captured for a patient (labs, symptoms, history).
@@ -126,30 +131,4 @@ CREATE TABLE literature_db (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_lit_source (source, created_at)
 ) ENGINE = InnoDB;
--- 8) Multi-agentic flow tracking
---    
-CREATE TABLE llm_flows (
-  flow_id CHAR(36) PRIMARY KEY,
-  ehr_id INT NOT NULL,
-  model_name VARCHAR(64) DEFAULT 'gpt-4o',
-  started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  finished_at TIMESTAMP NULL,
-  status ENUM('running', 'ok', 'error') DEFAULT 'running',
-  FOREIGN KEY (ehr_id) REFERENCES ehr_inputs(ehr_id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-CREATE TABLE panel_turns (
-  turn_id INT AUTO_INCREMENT PRIMARY KEY,
-  flow_id CHAR(36) NOT NULL,
-  step_index INT NOT NULL,
-  panel_json JSON NOT NULL,
-  -- full output of 5 doctors
-  action ENUM('ASK', 'ORDER', 'COMMIT') NOT NULL,
-  questions_json JSON NULL,
-  orders_json JSON NULL,
-  diagnosis_json JSON NULL,
-  certainty DECIMAL(5, 3) NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (flow_id) REFERENCES llm_flows(flow_id) ON DELETE CASCADE ON UPDATE CASCADE,
-  INDEX idx_flow_step (flow_id, step_index)
-);
 -- End of schema (no seed rows).
