@@ -378,6 +378,13 @@ tr:hover td {
   background-color: #f9fafb;
 }
 
+.table tbody tr.clickable-row {
+  cursor: pointer;
+}
+.table tbody tr.clickable-row:hover {
+  background-color: #f0f8ff; /* Light blue highlight */
+}
+
 .status {
   display: inline-block;
   padding: 0.35rem 0.8rem;
