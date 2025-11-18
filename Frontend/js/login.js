@@ -1,5 +1,7 @@
-import { apiPost, setToken, initHeader } from './common.js';
+import { apiPost, setToken, initHeader, setError, clearError } from './common.js'; // <-- 1. ADDED IMPORTS
 const $ = (sel) => document.querySelector(sel);
+
+const reEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 document.addEventListener('DOMContentLoaded', () => {
   initHeader();
@@ -12,33 +14,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const errPass = $('#errLoginPass');
 
   // === Validation helpers ===
-  function setError(el, msg, errField) {
-    if (errField) errField.textContent = msg;
-    if (el) el.classList.add('input-error');
-  }
-
-  function clearError(el, errField) {
-    if (errField) errField.textContent = '';
-    if (el) el.classList.remove('input-error');
-  }
+  // <-- 2. DELETED LOCAL FUNCTIONS -->
 
   function validateEmail() {
     const value = emailEl?.value.trim();
     if (!value) {
-      setError(emailEl, 'Please fill in this field', errEmail);
+      setError(emailEl, errEmail, 'Please fill in this field'); // <-- Now uses common helper
       return false;
     }
-    clearError(emailEl, errEmail);
+    if (!reEmail.test(value)) {
+      setError(emailEl, errEmail, 'Please enter a valid email address'); // <-- Now uses common helper
+      return false;
+    }
+    clearError(emailEl, errEmail); // <-- Now uses common helper
     return true;
   }
 
   function validatePassword() {
     const value = passEl?.value;
     if (!value) {
-      setError(passEl, 'Please fill in this field', errPass);
+      setError(passEl, errPass, 'Please fill in this field'); // <-- Now uses common helper
       return false;
     }
-    clearError(passEl, errPass);
+    clearError(passEl, errPass); // <-- Now uses common helper
     return true;
   }
 
@@ -57,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const validEmail = validateEmail();
       const validPass = validatePassword();
       if (!validEmail || !validPass) return;
-
 
       try {
         const r = await apiPost('/login_user', {
@@ -84,11 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
           const msg = data?.message || data?.error || data?.detail || `Request failed (HTTP ${r.status})`;
 
           if (/email/i.test(msg)) {
-            setError(emailEl, msg, errEmail);
+            setError(emailEl, errEmail, msg);
           } else if (/password/i.test(msg)) {
-            setError(passEl, msg, errPass);
+            setError(passEl, errPass, msg);
           } else {
-            setError(passEl, msg, errPass);
+            setError(passEl, errPass, msg);
           }
 
           passEl.value = '';

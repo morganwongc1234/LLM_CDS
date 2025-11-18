@@ -1,4 +1,4 @@
-import { apiPost, initHeader } from "./common.js";
+import { apiPost, initHeader, setError, clearError } from "./common.js"; // <-- 1. ADDED IMPORTS
 
 document.addEventListener("DOMContentLoaded", () => {
   initHeader();
@@ -51,30 +51,22 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // === Validation helpers ===
-  function setError(el, errField, msg) {
-    errField.textContent = msg;
-    el.classList.add("input-error");
-  }
-
-  function clearError(el, errField) {
-    errField.textContent = "";
-    el.classList.remove("input-error");
-  }
+  // <-- 2. DELETED LOCAL FUNCTIONS -->
 
   function validateName(el, errField) {
     const v = el.value.trim();
     if (v.length < 2) {
-      setError(el, errField, "Please enter a valid name.");
+      setError(el, errField, "Please enter a valid name."); // <-- Uses common helper
       return false;
     }
-    clearError(el, errField);
+    clearError(el, errField); // <-- Uses common helper
     return true;
   }
 
   function validateDOB() {
     const v = dobEl.value;
     if (!v) {
-      setError(dobEl, err.dob, "Please enter a valid date.");
+      setError(dobEl, err.dob, "Please enter a valid date."); // <-- Uses common helper
       return false;
     }
 
@@ -82,11 +74,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const today = new Date();
 
     if (selected > today) {
-      setError(dobEl, err.dob, "Please enter a valid date.");
+      setError(dobEl, err.dob, "Please enter a valid date."); // <-- Uses common helper
       return false;
     }
 
-    clearError(dobEl, err.dob);
+    clearError(dobEl, err.dob); // <-- Uses common helper
     return true;
   }
 
@@ -95,36 +87,35 @@ document.addEventListener("DOMContentLoaded", () => {
     const pattern = /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
 
     if (!pattern.test(v)) {
-      setError(emailEl, err.email, "Please enter a valid email.");
+      setError(emailEl, err.email, "Please enter a valid email."); // <-- Uses common helper
       return false;
     }
 
-    clearError(emailEl, err.email);
+    clearError(emailEl, err.email); // <-- Uses common helper
     return true;
   }
 
   function validatePostcode() {
     const v = postEl.value.trim();
     if (!/^\d{4}$/.test(v)) {
-      setError(postEl, err.post, "Please enter a 4-digit postcode.");
+      setError(postEl, err.post, "Please enter a 4-digit postcode."); // <-- Uses common helper
       return false;
     }
-    clearError(postEl, err.post);
+    clearError(postEl, err.post); // <-- Uses common helper
     return true;
   }
 
   function validateRequired(el, errField, msg = "This field is required.") {
     if (!el.value.trim()) {
-      setError(el, errField, msg);
+      setError(el, errField, msg); // <-- Uses common helper
       return false;
     }
-    clearError(el, errField);
+    clearError(el, errField); // <-- Uses common helper
     return true;
   }
 
   // === Phone formatting ===
   function formatPhoneInput(event) {
-    // 'event.target' is the specific input field (phoneEl or emergPhoneEl)
     const inputEl = event.target;
     
     let digits = inputEl.value.replace(/\D/g, "").slice(0, 10);
@@ -141,11 +132,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const digits = el.value.replace(/\D/g, ""); // Remove non-digits
 
     if (!/^04\d{8}$/.test(digits)) {
-      setError(el, errField, "Please enter a valid Australian number.");
+      setError(el, errField, "Please enter a valid Australian number."); // <-- Uses common helper
       return false;
     }
 
-    clearError(el, errField);
+    clearError(el, errField); // <-- Uses common helper
     return true;
   }
 
@@ -225,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
         date_of_birth: dobEl.value,
         sex: sexEl.value,
         phone_number: phoneEl.value.trim(),
-        email: emailEl.value.trim(), // This is now used for the user account
+        email: emailEl.value.trim(),
         address: finalAddress,
         emergency_contact_name: emergNameEl.value.trim(),
         emergency_contact_phone: emergPhoneEl.value.trim(),
@@ -235,12 +226,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await r.json();
 
       if (!r.ok) {
-        // Use innerHTML to render error text
         outEl.innerHTML = `❌ Error: ${data.error || data.detail}`;
         return;
       }
 
-      // Check for the email and temp_password in the successful response
       if (data.email && data.temp_password) {
         outEl.innerHTML = `
           <div class="success-message">
@@ -273,7 +262,6 @@ document.addEventListener("DOMContentLoaded", () => {
         notesEl.value = "";
         
       } else {
-        // Fallback if something went wrong but didn't error
         outEl.innerHTML = "✅ Patient created, but user details were not returned.";
       }
 
