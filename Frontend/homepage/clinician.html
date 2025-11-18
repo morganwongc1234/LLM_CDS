@@ -1,37 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <title>Clinician Dashboard – CDS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="../style.css" />
-  <link rel="stylesheet" href="../style/clinician.css" />
+  <link rel="stylesheet" href="../style/homepage.css" />
 </head>
 <body>
-  <h1>Clinician and Researcher Dashboard</h1>
+  <h1>Clinician Dashboard</h1>
   <nav id="mainNav"></nav>
-  <nav id="subNav"></nav>
+  
+  <div class="container">
+    
+    <div class="welcome-section">
+      <h2 id="welcomeBanner">Welcome back!</h2>
+      <p>Here is an overview of your clinical tools.</p>
+    </div>
 
-  <body>
-  <h2 id="welcomeBanner"></h2>
-  </body>
+    <div class="action-grid">
+      
+      <a href="../patients_list.html" class="action-card">
+        <div class="card-icon">👥</div>
+        <div class="card-title">Manage Patients</div>
+        <div class="card-desc">View patient records, register new patients, and update clinical notes.</div>
+      </a>
 
-  <main class="container">
+      <a href="../reports.html" class="action-card">
+        <div class="card-icon">📄</div>
+        <div class="card-title">Generate Reports</div>
+        <div class="card-desc">Create AI-assisted diagnostic reports and treatment plans.</div>
+      </a>
 
-    <section class="actions">
-      <h3>Quick Actions</h3>
-      <div class="button-grid">
-        <button class="secondary" href="../patients.html">Manage Patients</button>
-        <button class="secondary" href="../reports.html">Generate Reports</button>
-        <button class="secondary" href="../analytics.html">View Analytics</button>
-      </div>
-    </section>
-  </main>
+      <a href="../analytics.html" class="action-card">
+        <div class="card-icon">📊</div>
+        <div class="card-title">View Analytics</div>
+        <div class="card-desc">Visualise patient demographics and system usage statistics.</div>
+      </a>
 
-  <footer>
-    <p>© 2025 BIOM9450 CDS | For authorised medical and research personnel only.</p>
-  </footer>
+    </div>
+
+    <div class="health-footer">
+      <p>© 2025 BIOM9450 CDS | Clinician Portal.</p>
+    </div>
+
+  </div>
 
   <script type="module" src="../js/common.js"></script>
-  <script type="module" src="../js/clinician.js"></script>
+  
+  <script type="module">
+    import { apiGet, initHeader, requireAuthGuard } from '../js/common.js';
+    const $ = (sel) => document.querySelector(sel);
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initHeader();
+      if (!requireAuthGuard()) return;
+
+      try {
+        const r = await apiGet('/me');
+        if (r.ok) {
+          const data = await r.json();
+          const name = data?.me?.first_name || 'Clinician';
+          const banner = document.getElementById('welcomeBanner');
+          if (banner) banner.textContent = `Welcome back, ${name}!`;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  </script>
 </body>
 </html>

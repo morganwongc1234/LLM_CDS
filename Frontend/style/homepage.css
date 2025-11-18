@@ -1,0 +1,98 @@
+/* --- Dashboard Layout --- */
+.container {
+  /* Override default container styles for a wider, cleaner look */
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  width: 95% !important;
+  max-width: 1200px;
+  margin-top: 2rem;
+}
+
+/* --- Welcome Section --- */
+.welcome-section {
+  margin-bottom: 2rem;
+}
+
+.welcome-section h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-text);
+}
+
+.welcome-section p {
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+}
+
+/* --- Action Grid --- */
+.action-grid {
+  display: grid;
+  /* Auto-fit columns: at least 300px wide, fill the rest */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+/* --- Action Cards --- */
+.action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 2rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  text-decoration: none; /* Remove link underline */
+  color: var(--color-text);
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+  height: 100%;
+}
+
+.action-card:hover {
+  transform: translateY(-4px); /* Lift up slightly */
+  border-color: var(--color-primary);
+  box-shadow: 0 12px 20px rgba(37, 99, 235, 0.1);
+}
+
+/* --- Card Content --- */
+.card-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1.25rem;
+  background-color: #eff6ff; /* Very light blue */
+  padding: 1rem;
+  border-radius: 1rem;
+  line-height: 1;
+}
+
+.action-card:hover .card-icon {
+  background-color: #dbeafe; /* Slightly darker blue on hover */
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: var(--color-text);
+}
+
+.action-card:hover .card-title {
+  color: var(--color-primary);
+}
+
+.card-desc {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+/* --- Health Footer --- */
+.health-footer {
+  margin-top: 3rem;
+  text-align: right;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 1rem;
+}
