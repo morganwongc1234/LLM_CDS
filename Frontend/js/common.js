@@ -56,16 +56,17 @@ export function renderMainNav(containerEl, user) {
   // Choose dashboard page based on role
   let dashboardHref = `${pre}index.html`; // safe fallback
   const role = (user?.role || '').toLowerCase();
-  if (role === 'admin') {
-    dashboardHref = `${pre}homepage/admin.html`;
-  } else if (role === 'clinician' || role === 'researcher') {
-    dashboardHref = `${pre}homepage/clinician.html`;
-  } else if (role === 'patient') {
-    dashboardHref = `${pre}homepage/patient.html`;
-  }
+  
+  if (role === 'admin') dashboardHref = `${pre}homepage/admin.html`;
+  else if (role === 'clinician' || role === 'researcher') dashboardHref = `${pre}homepage/clinician.html`;
+  else if (role === 'patient') dashboardHref = `${pre}homepage/patient.html`;
 
-  // Conditionally create links based on role
-  const patientsDropdown = (role !== 'patient')
+  // --- PERMISSION FLAGS ---
+  const isMedicalStaff = role === 'clinician' || role === 'researcher';
+  const isAdmin = role === 'admin';
+
+  // 1. Patients Dropdown (Medical Staff ONLY)
+  const patientsDropdown = isMedicalStaff
     ? `
     <div class="dropdown">
       <button class="dropbtn" type="button" style="font-weight:700;">
@@ -76,38 +77,32 @@ export function renderMainNav(containerEl, user) {
         <a href="${pre}patient_register.html" role="menuitem">Register Patient</a>
       </div>
     </div>
-  `
-    : '';
+  ` : '';
 
-  const reportsLink = (role !== 'patient')
-    ? `<a href="${pre}reports.html">Reports</a>`
-    : '';
+  // 2. Reports & Analytics (Medical Staff ONLY)
+  const reportsLink = isMedicalStaff ? `<a href="${pre}reports.html">Reports</a>` : '';
+  const analyticsLink = isMedicalStaff ? `<a href="${pre}analytics.html">Analytics</a>` : '';
 
-  const analyticsLink = (role !== 'patient')
-    ? `<a href="${pre}analytics.html">Analytics</a>`
-    : '';
+  // 3. Users Tab (Admins ONLY)
+  const usersLink = isAdmin ? `<a href="${pre}users.html">Users</a>` : '';
 
-  // Left: if authed -> full; else minimal
-  // ✨ 1. REMOVED Profile link from here
+  // Left Nav Links
   const left = isAuthed
     ? `
       <a href="${pre}index.html">Home</a>
       <a href="${dashboardHref}">Dashboard</a>
-      ${patientsDropdown}
-      ${reportsLink}
-      ${analyticsLink}
-    `
+      ${usersLink}       ${patientsDropdown} ${reportsLink}      ${analyticsLink}    `
     : `
       <a href="${pre}index.html">Home</a>
       <a href="${pre}login.html">Login</a>
       <a href="${pre}register.html">Register</a>
     `;
 
-  // ✨ 2. ADDED Profile link here, between email and logout
+  // Right Nav Links
   const right = isAuthed
     ? `
       <span class="badge ok">${email}</span>
-      <a href="${pre}profile.html">Profile</a>
+      <a href="${pre}profile.html" class="profile-nav-link">Profile</a>
       <button id="jsLogout">Logout</button>
     `
     : `
@@ -131,24 +126,17 @@ export function renderMainNav(containerEl, user) {
     });
   }
 
-  // Support both hover (CSS) and click (JS) for accessibility
+  // Dropdown wiring
   const dd = containerEl.querySelector('.dropdown');
   const btn = containerEl.querySelector('.dropbtn');
-  const panel = containerEl.querySelector('.dropdown-content');
-
-  if (dd && btn && panel) {
-    // Toggle on click using classes instead of inline styles
+  if (dd && btn) {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       dd.classList.toggle('open');
     });
-
-    // Close when clicking elsewhere
     document.addEventListener('click', (e) => {
-      if (!dd.contains(e.target)) {
-        dd.classList.remove('open');
-      }
+      if (!dd.contains(e.target)) dd.classList.remove('open');
     });
   }
 }
