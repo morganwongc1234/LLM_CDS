@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Update Patient Details</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style/patient_register.css" />
+  <style>
+    /* Visual cue for locked fields */
+    input:disabled, select:disabled {
+      background-color: #f3f4f6;
+      color: #6b7280;
+      cursor: not-allowed;
+      border-color: #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+  <h1>Update Patient Details</h1>
+  <nav id="mainNav"></nav>
+
+  <div class="container" style="grid-template-columns: 1fr; width: 85%;">
+    <div class="registerPatientsForm">
+      <div class="form-wrapper">
+        <legend>Update Patient</legend>
+        <form id="editPatientForm">
+          <div class="row nameRow">
+            <div class="col prefix">
+              <label>Prefix</label>
+              <select id="patPrefix" disabled>
+                <option value="">Select</option>
+                <option>Mr.</option>
+                <option>Ms.</option>
+                <option>Mrs.</option>
+                <option>Dr.</option>
+              </select>
+            </div>
+            <div class="col">
+              <label>First name</label>
+              <input id="patFirst" disabled />
+            </div>
+            <div class="col">
+              <label>Middle name</label>
+              <input id="patMiddle" disabled />
+            </div>
+            <div class="col">
+              <label>Last name</label>
+              <input id="patLast" disabled />
+            </div>
+          </div>
+
+          <div class="row dobSexRow">
+            <div class="col">
+              <label>Date of Birth</label>
+              <input id="patDOB" type="date" disabled />
+            </div>
+            <div class="col sex">
+              <label>Sex *</label>
+              <select id="patSex" required>
+                <option value="">Select</option>
+                <option>M</option>
+                <option>F</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row contactRow">
+            <div class="col">
+              <label>Phone *</label>
+              <input id="patPhone" placeholder="0412 345 678" required />
+            </div>
+            <div class="col">
+              <label>Email</label>
+              <input id="patEmail" type="email" disabled />
+            </div>
+          </div>
+
+          <label>Address Line 1 *</label>
+          <input id="patAddressLine1" required />
+
+          <label>Address Line 2</label>
+          <input id="patAddressLine2" placeholder="Optional" />
+
+          <div class="row">
+            <div class="col">
+              <label>Suburb *</label>
+              <input id="patSuburb" required />
+            </div>
+            <div class="col">
+              <label>City *</label>
+              <input id="patCity" required />
+            </div>
+            <div class="col">
+              <label>State *</label>
+              <select id="patState">
+                <option value="">Select</option>
+                <option value="NSW">New South Wales</option>
+                <option value="VIC">Victoria</option>
+                <option value="QLD">Queensland</option>
+                <option value="WA">Western Australia</option>
+                <option value="SA">South Australia</option>
+                <option value="TAS">Tasmania</option>
+                <option value="ACT">Australian Capital Territory</option>
+                <option value="NT">Northern Territory</option>
+              </select>
+            </div>
+            <div class="col">
+              <label>Postcode *</label>
+              <input id="patPostcode" required />
+            </div>
+          </div>
+
+          <div class="row emergencyRow">
+            <div class="col">
+              <label>Emergency Contact Full Name *</label>
+              <input id="patEmergencyName" required />
+            </div>
+            <div class="col">
+              <label>Emergency Contact Phone *</label>
+              <input id="patEmergencyPhone" required />
+            </div>
+          </div>
+
+          <label>Notes</label>
+          <textarea id="patNotes" rows="5"></textarea>
+
+          <div class="row" style="margin-top: 2rem; gap: 1rem;">
+            <div class="col" style="flex: 1;">
+              <button id="btnSaveChanges" type="submit" class="primary">Save Changes</button>
+            </div>
+            <div class="col" style="flex: 1;">
+              <button id="btnCancel" type="button" class="secondary" style="width: 100%;">Cancel</button>
+            </div>
+          </div>
+
+          <pre id="outUpdate"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/common.js"></script>
+  <script type="module" src="js/patient_edit.js"></script>
+</body>
+</html>
