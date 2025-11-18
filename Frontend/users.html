@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>User Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style/patient_list.css" />
+</head>
+<body>
+  <h1>User Management</h1>
+  <nav id="mainNav"></nav>
+
+  <div class="container">
+    <div class="searchPatientsForm">
+      <div class="form-wrapper">
+        <legend>All Users</legend>
+        
+        <div class="row">
+          <div class="col">
+            <label>Last Name</label>
+            <input id="qLast" placeholder="Filter by last name" />
+          </div>
+          <div class="col">
+            <label>First Name</label>
+            <input id="qFirst" placeholder="Filter by first name" />
+          </div>
+          <div class="col">
+            <label>Role</label>
+            <select id="qRole">
+              <option value="">All Roles</option>
+              <option value="clinician">Clinician</option>
+              <option value="researcher">Researcher</option>
+              <option value="admin">Admin</option>
+              <option value="patient">Patient</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top: 1rem;">
+          <button id="btnFilter" class="primary">Filter Users</button>
+        </div>
+
+        <div id="usersTableContainer" style="margin-top: 1.5rem;">
+          <p>Loading users...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/common.js"></script>
+  <script type="module" src="js/users.js"></script>
+</body>
+</html>

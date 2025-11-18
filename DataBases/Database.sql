@@ -1,20 +1,18 @@
 -- ============================================
--- BIOM9450 CDS – Fresh database schema (renamed)
+-- BIOM9450 CDS – Fresh database schema
 -- ============================================
+
 -- 0) Create DB & defaults
 DROP DATABASE IF EXISTS cds_db;
 CREATE DATABASE cds_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE cds_db;
 SET NAMES utf8mb4;
--- (Helpful strictness)
 SET sql_mode = 'STRICT_ALL_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
 -- 1) Users
---    Application users who log into the system.
---    Includes structured name fields.
 CREATE TABLE users (
   user_id INT PRIMARY KEY AUTO_INCREMENT,
   prefix VARCHAR(20) NULL,
-  -- e.g. Dr., Prof., Ms.
   first_name VARCHAR(100) NOT NULL,
   middle_name VARCHAR(100) NULL,
   last_name VARCHAR(100) NOT NULL,
@@ -24,14 +22,12 @@ CREATE TABLE users (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_users_name (last_name, first_name)
 ) ENGINE = InnoDB;
+
 -- 2) Patients
---    Real-world patients (not app users). Identifier is patient_id (AUTO_INCREMENT).
---    Includes structured name fields + demographics/contact.
 CREATE TABLE patients (
   patient_id INT PRIMARY KEY AUTO_INCREMENT,
-  user_id INT NULL UNIQUE, -- <-- This is the new linked User ID
+  user_id INT NULL UNIQUE, -- Linked User ID
   prefix VARCHAR(20) NULL,
-  -- e.g. Mr., Ms., Dr.
   first_name VARCHAR(100) NOT NULL,
   middle_name VARCHAR(100) NULL,
   last_name VARCHAR(100) NOT NULL,
@@ -46,14 +42,12 @@ CREATE TABLE patients (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_patient_name (last_name, first_name),
   INDEX idx_patient_email (email),
-  -- This is the new constraint that links the tables
   CONSTRAINT fk_patient_user
     FOREIGN KEY (user_id) REFERENCES users(user_id)
     ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE = InnoDB;
+
 -- 3) EHR inputs
---    Structured/unstructured inputs captured for a patient (labs, symptoms, history).
---    author_user_id indicates who entered the record.
 CREATE TABLE ehr_inputs (
   ehr_id INT PRIMARY KEY AUTO_INCREMENT,
   patient_id INT NOT NULL,
@@ -67,42 +61,33 @@ CREATE TABLE ehr_inputs (
   CONSTRAINT fk_ehr_patient FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT fk_ehr_author FOREIGN KEY (author_user_id) REFERENCES users(user_id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE = InnoDB;
+
 -- 4) LLM reports
---    Output produced by an LLM for a given EHR input (diagnosis, treatment, etc.).
 CREATE TABLE llm_reports (
   report_id INT PRIMARY KEY AUTO_INCREMENT,
   ehr_id INT NOT NULL,
-  task_type ENUM(
-    'diagnosis',
-    'treatment',
-    'literature',
-    'management'
-  ) NOT NULL,
+  task_type ENUM('diagnosis','treatment','literature','management') NOT NULL,
   model_name VARCHAR(100) NOT NULL,
-  -- e.g. mistral-small-latest, gpt-4o, etc.
   output_md MEDIUMTEXT NOT NULL,
-  -- markdown for display
   citations_json JSON NULL,
-  -- optional structured citations
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_reports_ehr (ehr_id),
   INDEX idx_reports_task (task_type, created_at),
   CONSTRAINT fk_reports_ehr FOREIGN KEY (ehr_id) REFERENCES ehr_inputs(ehr_id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE = InnoDB;
+
 -- 5) Prompt history
---    Prompts/parameters used to generate a given LLM report (traceability).
 CREATE TABLE prompt_history (
   prompt_id INT PRIMARY KEY AUTO_INCREMENT,
   report_id INT NOT NULL,
   prompt_text MEDIUMTEXT NOT NULL,
   params_json JSON NULL,
-  -- temperature, top_p, etc.
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_prompt_report (report_id),
   CONSTRAINT fk_prompt_report FOREIGN KEY (report_id) REFERENCES llm_reports(report_id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE = InnoDB;
--- 6) Feedback (optional but recommended)
---    Users rate/comment on a specific LLM report.
+
+-- 6) Feedback
 CREATE TABLE feedback (
   feedback_id INT PRIMARY KEY AUTO_INCREMENT,
   report_id INT NOT NULL,
@@ -112,23 +97,62 @@ CREATE TABLE feedback (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_fb_report (report_id),
   INDEX idx_fb_user (user_id),
-  CONSTRAINT chk_stars CHECK (
-    stars BETWEEN 1 AND 5
-  ),
+  CONSTRAINT chk_stars CHECK (stars BETWEEN 1 AND 5),
   CONSTRAINT fk_fb_report FOREIGN KEY (report_id) REFERENCES llm_reports(report_id) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT fk_fb_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE = InnoDB;
--- 7) Literature DB (optional for future RAG)
+
+-- 7) Literature DB
 CREATE TABLE literature_db (
   doc_id INT PRIMARY KEY AUTO_INCREMENT,
   source VARCHAR(50) NOT NULL,
-  -- "PubMed", "OMIM", etc.
   title VARCHAR(512) NOT NULL,
   url VARCHAR(2048) NULL,
   abstract_txt MEDIUMTEXT NULL,
   embedding_vec BLOB NULL,
-  -- store elsewhere if large
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_lit_source (source, created_at)
 ) ENGINE = InnoDB;
--- End of schema (no seed rows).
+
+-- ============================================
+-- 8) Seed Data (Preset Users & Patients)
+--    All passwords are: qwer1122
+-- ============================================
+
+-- 1. CLINICIAN: Dr. Morgan Wong (morganwongc@gmail.com)
+INSERT INTO users (prefix, first_name, last_name, email, password_hash, role)
+VALUES (
+  'Dr.', 'Morgan', 'Wong', 'morganwongc@gmail.com',
+  '$2b$10$6pMGtTRTrpFcAJzkxIu5oel5MkcnCPmOPGXv1PulzTKWt1BlCxCu.', -- Hash for 'qwer1122'
+  'clinician'
+);
+
+-- 2. ADMIN: Mr. Morgan Wong (morganwongcc@gmail.com)
+INSERT INTO users (prefix, first_name, last_name, email, password_hash, role)
+VALUES (
+  'Mr.', 'Morgan', 'Wong', 'morganwongcc@gmail.com',
+  '$2b$10$6pMGtTRTrpFcAJzkxIu5oel5MkcnCPmOPGXv1PulzTKWt1BlCxCu.', -- Hash for 'qwer1122'
+  'admin'
+);
+
+-- 3. PATIENT: Mr. Morgan Wong (morganwongccc@gmail.com)
+INSERT INTO users (prefix, first_name, last_name, email, password_hash, role)
+VALUES (
+  'Mr.', 'Morgan', 'Wong', 'morganwongccc@gmail.com',
+  '$2b$10$6pMGtTRTrpFcAJzkxIu5oel5MkcnCPmOPGXv1PulzTKWt1BlCxCu.', -- Hash for 'qwer1122'
+  'patient'
+);
+
+-- Link Patient Record to User #3 (morganwongccc@gmail.com)
+INSERT INTO patients (
+  user_id, prefix, first_name, last_name, 
+  date_of_birth, sex, phone_number, 
+  address, email, 
+  emergency_contact_name, emergency_contact_phone, notes_text
+)
+VALUES (
+  3, 'Mr.', 'Morgan', 'Wong', 
+  '2005-04-06', 'M', '0481 302 032', 
+  '100 Bellamy Street, Pennat Hills, Sydney, NSW, 2120', 'morganwongccc@gmail.com', 
+  'Mina Truong', '0412 160 405', 'Preset test patient.'
+);

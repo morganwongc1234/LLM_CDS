@@ -151,6 +151,50 @@ app.get('/me', authMiddleware, async (req, res) => {
   }
 });
 
+// --- Get All Users (Admin Only) with Filtering ---
+app.get('/users', authMiddleware, async (req, res) => {
+  // 1. Strict Role Check
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied. Admins only.' });
+  }
+
+  // 2. Get filter params
+  const { last_name, first_name, role } = req.query;
+
+  try {
+    let sql = 'SELECT user_id, prefix, first_name, last_name, email, role, created_at FROM users';
+    const conditions = [];
+    const params = [];
+
+    // 3. Build dynamic filters
+    if (last_name) {
+      conditions.push('last_name LIKE ?');
+      params.push(`${last_name}%`);
+    }
+    if (first_name) {
+      conditions.push('first_name LIKE ?');
+      params.push(`${first_name}%`);
+    }
+    if (role) {
+      conditions.push('role = ?');
+      params.push(role);
+    }
+
+    if (conditions.length > 0) {
+      sql += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    // 4. Sort Ascending
+    sql += ' ORDER BY user_id ASC';
+
+    const [rows] = await pool.execute(sql, params);
+    res.json(rows);
+  } catch (err) {
+    console.error('Error in GET /users:', err);
+    res.status(500).json({ error: 'Database error', detail: err.message });
+  }
+});
+
 // --- Patients (protected) ---
 app.get('/patients', authMiddleware, async (req, res) => {
   try {
