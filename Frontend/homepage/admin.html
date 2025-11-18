@@ -1,39 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>CDS Demo – Admin Dashboard</title>
+  <meta charset="utf-8" />
+  <title>Admin Dashboard – CDS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style/homepage.css" />
 </head>
-
 <body>
+  <h1>Administrator Dashboard</h1>
   <nav id="mainNav"></nav>
-  <nav id="subNav"></nav>
+  
+  <div class="container">
+    
+    <div class="welcome-section">
+      <h2 id="welcomeBanner">Welcome, Administrator</h2>
+      <p>Monitor users, system health, and platform activity.</p>
+    </div>
 
-  <main>
-    <h1>Clinical Decision Support (CDS) – Demo</h1>
-    <h1>Administrator Dashboard</h1>
+    <div class="action-grid">
+      
+      <a href="../users.html" class="action-card">
+        <div class="card-icon">🛡️</div>
+        <div class="card-title">Manage Users</div>
+        <div class="card-desc">View all registered users, check roles, and manage accounts.</div>
+      </a>
 
-    <section class="intro">
-      <h2>Welcome, System Administrator</h2>
-      <p>Monitor users, system health, and platform activity from one place.</p>
-    </section>
+      <a href="../analytics.html" class="action-card">
+        <div class="card-icon">📈</div>
+        <div class="card-title">System Analytics</div>
+        <div class="card-desc">Monitor platform usage, active sessions, and performance metrics.</div>
+      </a>
 
-    <section class="actions">
-      <h3>Admin Tools</h3>
-      <div class="button-grid">
-        <a href="../users.html" class="btn">Manage Users</a>
-        <a href="../database.html" class="btn">View Database Health</a>
-        <a href="../analytics.html" class="btn">System Analytics</a>
-      </div>
-    </section>
-  </main>
+      <a href="#" class="action-card" onclick="alert('Database health check coming soon!'); return false;">
+        <div class="card-icon">💾</div>
+        <div class="card-title">Database Health</div>
+        <div class="card-desc">Check connection status and view storage statistics.</div>
+      </a>
 
-  <footer>
-    <p>&copy; 2025 BIOM9450 CDS | Admin Access Only</p>
-  </footer>
+    </div>
+
+    <div class="health-footer">
+      <p>© 2025 BIOM9450 CDS | Admin Portal.</p>
+    </div>
+
+  </div>
 
   <script type="module" src="../js/common.js"></script>
+  
+  <script type="module">
+    import { apiGet, initHeader, requireAuthGuard } from '../js/common.js';
+    const $ = (sel) => document.querySelector(sel);
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initHeader();
+      if (!requireAuthGuard()) return;
+
+      try {
+        const r = await apiGet('/me');
+        if (r.ok) {
+          const data = await r.json();
+          const name = data?.me?.first_name || 'Admin';
+          const banner = document.getElementById('welcomeBanner');
+          if (banner) banner.textContent = `Welcome back, ${name}!`;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  </script>
 </body>
 </html>

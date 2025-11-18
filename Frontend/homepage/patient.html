@@ -1,37 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
   <title>My Health Portal – CDS</title>
-  <link rel="stylesheet" href="../style.css">
-  <script type="module" src="../js/common.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style/homepage.css" />
 </head>
 <body>
+  <h1>My Health Portal</h1>
   <nav id="mainNav"></nav>
-  <nav id="subNav"></nav>
+  
+  <div class="container">
+    
+    <div class="welcome-section">
+      <h2>Welcome to Your Dashboard</h2>
+      <p>View your health information and manage your account.</p>
+    </div>
 
-  <main>
-    <h1>Clinical Decision Support (CDS) – Demo</h1>
-    <h1>Patients Dashboard</h1>
+    <div class="action-grid">
+      
+      <a href="../profile.html" class="action-card">
+        <div class="card-icon">👤</div>
+        <div class="card-title">My Profile</div>
+        <div class="card-desc">View and update your personal details and change your password.</div>
+      </a>
 
-    <section class="intro">
-      <h2>Welcome to Your Health Dashboard</h2>
-      <p>View your health information, reports, and communicate with your clinician.</p>
-    </section>
+      <a href="#" class="action-card" onclick="alert('Report viewing coming soon!'); return false;">
+        <div class="card-icon">📂</div>
+        <div class="card-title">My Reports</div>
+        <div class="card-desc">Access your medical history and past diagnostic reports.</div>
+      </a>
 
-    <section class="actions">
-      <h3>My Account</h3>
-      <div class="button-grid">
-        <a href="../profile.html" class="btn">View My Profile</a>
-        <a href="../my_reports.html" class="btn">View My Reports</a>
-        <a href="../support.html" class="btn">Contact My Clinician</a>
-      </div>
-    </section>
-  </main>
+      <a href="#" class="action-card" onclick="alert('Support feature coming soon!'); return false;">
+        <div class="card-icon">📞</div>
+        <div class="card-title">Contact Support</div>
+        <div class="card-desc">Get in touch with your clinic or request an appointment.</div>
+      </a>
 
-  <footer>
-    <p>© 2025 BIOM9450 CDS | Patient Portal.</p>
-  </footer>
+    </div>
+
+    <div class="health-footer">
+      <p>© 2025 BIOM9450 CDS | Patient Portal.</p>
+    </div>
+
+  </div>
 
   <script type="module" src="../js/common.js"></script>
 </body>
