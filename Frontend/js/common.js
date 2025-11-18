@@ -28,6 +28,14 @@ export async function apiPost(path, body) {
   });
 }
 
+export async function apiPut(path, body) {
+  return fetch(API_BASE + path, {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify(body || {})
+  });
+}
+
 // ------- Path prefix helper (so links work from /homepage/* too) -------
 function prefixToRoot() {
   // If this page lives in /homepage/, links need "../"
@@ -37,7 +45,6 @@ function prefixToRoot() {
   return '';
 }
 
-// ------- Main Nav rendering (with Patients dropdown) -------
 // ------- Main Nav rendering (with Patients dropdown) -------
 export function renderMainNav(containerEl, user) {
   if (!containerEl) return;
@@ -88,6 +95,7 @@ export function renderMainNav(containerEl, user) {
       ${patientsDropdown}
       ${reportsLink}
       ${analyticsLink}
+      <a href="${pre}profile.html" style="margin-left: auto;">Profile</a> 
     `
     : `
       <a href="${pre}index.html">Home</a>
@@ -190,18 +198,27 @@ export function requireAuthGuard() {
 }
 
 // ------- Input Validation Helpers -------
-export function setError(inputSel, errorSel = null, msg = '') {
-  const inputEl = document.querySelector(inputSel);
-  const errorEl = errorSel ? document.querySelector(errorSel) : inputEl?.nextElementSibling;
+
+export function setError(inputEl, errorEl = null, msg = '') {
+  // We are now passing in the element directly, so no querySelector is needed.
+  
+  // If no errorEl was passed, try to find the next sibling
+  if (!errorEl) {
+    errorEl = inputEl?.nextElementSibling;
+  }
 
   if (inputEl) inputEl.classList.add('error');
   if (errorEl) errorEl.textContent = msg;
 }
 
-export function clearError(inputSel, errorSel = null) {
-  const inputEl = document.querySelector(inputSel);
-  const errorEl = errorSel ? document.querySelector(errorSel) : inputEl?.nextElementSibling;
-
+export function clearError(inputEl, errorEl = null) {
+  // We are now passing in the element directly, so no querySelector is needed.
+  
+  // If no errorEl was passed, try to find the next sibling
+  if (!errorEl) {
+    errorEl = inputEl?.nextElementSibling;
+  }
+  
   if (inputEl) inputEl.classList.remove('error');
   if (errorEl) errorEl.textContent = '';
 }
