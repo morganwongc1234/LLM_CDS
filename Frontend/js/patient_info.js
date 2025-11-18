@@ -2,14 +2,13 @@ import {
   apiGet,
   initHeader,
   requireAuthGuard,
-  formatDate // We get this from common.js
+  formatDate
 } from './common.js';
 
 const $ = (sel) => document.querySelector(sel);
 
-// ✨ UPDATED: This function now renders a table
+// This function will render the patient data
 function renderPatientDetail(patient) {
-  // Selects the <section> from your patient_info.html
   const container = $('#patientInfo'); 
   if (!container) return;
 
@@ -58,7 +57,7 @@ function renderPatientDetail(patient) {
         <tr>
           <td><strong>Notes:</strong></td>
           <td>
-            <pre style="margin: 0; white-space: pre-wrap; font-family: inherit;">${patient.notes_text ?? 'No notes.'}</pre>
+            <pre>${patient.notes_text ?? 'No notes.'}</pre>
           </td>
         </tr>
       </tbody>
@@ -66,12 +65,20 @@ function renderPatientDetail(patient) {
   `;
 }
 
+// ✨ ADD THIS FUNCTION to wire the new button
+function wireButton(patientId) {
+  $('#btnUpdatePatientDetails')?.addEventListener('click', () => {
+    // Go to a new edit page, passing the patient ID
+    window.location.href = `patient_edit.html?id=${patientId}`;
+  });
+}
+
 // This function will run when the page loads
 async function initPage() {
   await initHeader();
   if (!requireAuthGuard()) return;
 
-  const container = $('#patientInfo'); // Matches your HTML
+  const container = $('#patientInfo');
 
   // 1. Get the patient ID from the URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -84,17 +91,19 @@ async function initPage() {
 
   // 2. Fetch the data from our new API endpoint
   try {
-    // This calls the /patients/:id route we made in server.js
     const r = await apiGet(`/patients/${patientId}`);
     const data = await r.json();
 
     if (!r.ok) {
-      container.innerHTML = `<p class="error">Error: ${data.error || 'Could not fetch patient data.'}</p>`;
+      container.innerHTML = `<p class="error">${data.error || 'Could not fetch patient data.'}</p>`;
       return;
     }
 
     // 3. Render the data
     renderPatientDetail(data);
+
+    // 4. ✨ Wire up the button
+    wireButton(patientId);
 
   } catch (err) {
     console.error('Fetch error:', err);

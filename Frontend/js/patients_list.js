@@ -5,17 +5,22 @@ import {
   requireAuthGuard,
   setError,
   clearError,
-  formatDate
+  formatDate // We moved this to common.js
 } from './common.js';
 
 const $ = (sel) => document.querySelector(sel);
 
+// --- Element references (will be defined in DOMContentLoaded) ---
+let lastEl, firstEl, dobEl;
+let errLast, errDOB;
+let outPatients;
+
 // ---------------- Render Patients Table ----------------
 function renderPatients(data) {
-  const out = $('#outPatients');
+  if (!outPatients) outPatients = $('#outPatients');
 
   if (!Array.isArray(data)) {
-    out.textContent = JSON.stringify(data, null, 2);
+    outPatients.textContent = JSON.stringify(data, null, 2);
     return;
   }
 
@@ -33,7 +38,7 @@ function renderPatients(data) {
     </tr>
   `).join('');
 
-  out.innerHTML = `
+  outPatients.innerHTML = `
     <table class="table">
       <thead>
         <tr>
@@ -48,15 +53,16 @@ function renderPatients(data) {
 
 // ---------------- Search Logic ----------------
 async function search() {
-  const ln = $('#qLast').value.trim();
-  const fn = $('#qFirst').value.trim();
-  const dob = $('#qDOB').value; // This is the value from the date input
+  const ln = lastEl.value.trim();
+  const fn = firstEl.value.trim();
+  const dob = dobEl.value;
 
-  clearError('#qLast');
+  // ✨ FIX: Use element variables instead of strings
+  clearError(lastEl, errLast);
 
   // Basic required check
   if (!ln) {
-    setError('#qLast', '#errQLast', 'Last name is required.');
+    setError(lastEl, errLast, 'Last name is required.'); // ✨ FIX
     return;
   }
 
@@ -67,19 +73,17 @@ async function search() {
     today.setHours(0, 0, 0, 0); // ignore time part
 
     if (dobDate > today) {
-      setError('#qDOB', null, 'DOB cannot be in the future.');
+      setError(dobEl, errDOB, 'DOB cannot be in the future.'); // ✨ FIX
       return;
     }
   }
 
   // Clear any previous DOB error if valid
-  clearError('#qDOB');
+  clearError(dobEl, errDOB); // ✨ FIX
 
   const qs = new URLSearchParams();
   qs.set('last_name', ln);
   if (fn) qs.set('first_name', fn);
-  
-  // ✨ UPDATED: Send 'date_of_birth' to match the server
   if (dob) qs.set('date_of_birth', dob);
 
   const r = await apiGet('/patients/search?' + qs.toString());
@@ -89,11 +93,9 @@ async function search() {
 
 // ---------------- Real‑time Validation ----------------
 function attachValidation() {
-  const lastEl = $('#qLast');
-  const errLast = $('#errQLast');
-
+  // Elements are now defined globally in the module
   lastEl.addEventListener('blur', () => {
-    if (!lastEl.value.trim()) setError(lastEl, 'Last name is required', errLast);
+    if (!lastEl.value.trim()) setError(lastEl, errLast, 'Last name is required');
   });
 
   lastEl.addEventListener('input', () => {
@@ -105,6 +107,14 @@ function attachValidation() {
 document.addEventListener('DOMContentLoaded', async () => {
   await initHeader();
   if (!requireAuthGuard()) return;
+
+  // ✨ FIX: Define all elements on page load
+  lastEl = $('#qLast');
+  firstEl = $('#qFirst');
+  dobEl = $('#qDOB');
+  errLast = $('#errQLast');
+  errDOB = $('#errQDOB');
+  outPatients = $('#outPatients');
 
   attachValidation();
 
