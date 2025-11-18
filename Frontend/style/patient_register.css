@@ -70,36 +70,47 @@ textarea {
   background-color: var(--color-surface);
 }
 
-/* --- ADD THIS to the end of patient_register.css --- */
+/* --- REPLACE the old styles at the end of patient_register.css --- */
 
 #outCreate {
   text-align: left;
   line-height: 1.6;
+  font-family: var(--font-family); 
 }
 
+/* The main outer box */
 .success-message {
-  border: 1px solid #166534; /* Green border */
-  background-color: #dcfce7; /* Light green background */
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
   padding: 1rem;
   border-radius: var(--radius);
-  color: #14532d; /* Dark green text */
+  color: var(--color-text);
+  font-family: var(--font-family); /* Ensures correct font */
+}
+
+.success-message strong {
+  color: var(--color-primary);
+  font-size: 1.1rem;
 }
 
 .success-message p {
   margin: 0.75rem 0 0.5rem;
 }
 
+/* The inner box with the login details */
 .login-details-box {
-  background-color: #f0fdf4; /* Very light green */
-  border: 1px dashed #166534;
+  background-color: var(--color-bg);
+  border: 1px dashed var(--color-primary);
   padding: 0.75rem;
-  font-family: monospace;
   font-size: 1.1rem;
   line-height: 1.8;
-  user-select: all; /* Makes it easy to copy */
+  user-select: all;
+  border-radius: var(--radius);
+  font-family: inherit; 
 }
 
+/* The password text */
 .temp-password {
     font-weight: 700;
-    color: #b91c1c; /* Make password red to stand out */
+    color: var(--color-primary-hover);
 }
