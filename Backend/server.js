@@ -317,6 +317,223 @@ app.get('/patients/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// --- Update a patient's details (by a clinician) ---
+app.put('/patients/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const userRole = req.user.role;
+
+  // 1. Security Check: Only clinicians or admins can do this
+  if (userRole !== 'clinician' && userRole !== 'admin') {
+    return res.status(403).json({ error: 'You do not have permission to perform this action' });
+  }
+
+  // 2. Get data from the body
+  const {
+    prefix = null,
+    first_name = null,
+    middle_name = null,
+    last_name = null,
+    date_of_birth = null,
+    sex = null,
+    phone_number = null,
+    address = null,
+    email = null,
+    emergency_contact_name = null,
+    emergency_contact_phone = null,
+    notes_text = null
+  } = req.body;
+
+  // 3. Validation
+  if (!first_name || !last_name || !email) {
+    return res.status(400).json({ error: 'First name, last name, and email are required' });
+  }
+  
+  try {
+    // 4. Run the update query
+    const [result] = await pool.execute(
+      `UPDATE patients SET 
+         prefix = ?, first_name = ?, middle_name = ?, last_name = ?,
+         date_of_birth = ?, sex = ?, phone_number = ?, address = ?, 
+         email = ?, emergency_contact_name = ?, emergency_contact_phone = ?, 
+         notes_text = ?
+       WHERE patient_id = ?`,
+      [
+        prefix, first_name, middle_name, last_name,
+        date_of_birth, sex, phone_number, address,
+        email, emergency_contact_name, emergency_contact_phone,
+        notes_text,
+        id // The patient_id from the URL
+      ]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Patient not found or no changes made' });
+    }
+
+    res.json({ status: 'ok', message: 'Patient updated successfully' });
+
+  } catch (err) {
+    console.error(`Error in PUT /patients/${id}:`, err);
+    res.status(500).json({ error: 'Database error', detail: err.message });
+  }
+});
+
+
+// --- Get complete user profile (and patient data if applicable) ---
+app.get('/api/profile', authMiddleware, async (req, res) => {
+  const userId = req.user.uid;
+  const userRole = req.user.role;
+
+  try {
+    // 1. Fetch the user's data from the 'users' table
+    const [userRows] = await pool.execute(
+      'SELECT user_id, prefix, first_name, middle_name, last_name, email, role, created_at FROM users WHERE user_id = ?',
+      [userId]
+    );
+
+    if (userRows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const profileData = {
+      user: userRows[0],
+      patient: null // Default to null
+    };
+
+    // 2. If the user is a 'patient', find their linked patient record
+    if (userRole === 'patient') {
+      const [patientRows] = await pool.execute(
+        'SELECT * FROM patients WHERE user_id = ?',
+        [userId]
+      );
+      
+      if (patientRows.length > 0) {
+        profileData.patient = patientRows[0];
+      }
+    }
+
+    // 3. Return the combined profile data
+    res.json(profileData);
+
+  } catch (err) {
+    console.error(`Error in GET /api/profile for user ${userId}:`, err);
+    res.status(500).json({ error: 'Database error', detail: err.message });
+  }
+});
+
+// --- Update user profile ---
+app.put('/api/profile', authMiddleware, async (req, res) => {
+  const userId = req.user.uid;
+  const userRole = req.user.role;
+
+  // 1. Get the allowed fields from the body for the 'users' table
+  const {
+    prefix, first_name, middle_name, last_name
+  } = req.body.user;
+
+  // 2. Get the allowed fields for the 'patients' table
+  const patientData = req.body.patient;
+
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // 3. Update the 'users' table (same as before)
+    await connection.execute(
+      `UPDATE users SET prefix = ?, first_name = ?, middle_name = ?, last_name = ?
+       WHERE user_id = ?`,
+      [prefix, first_name, middle_name, last_name, userId]
+    );
+
+    // 4. If they are a patient and patient data was provided, update 'patients' table
+    if (userRole === 'patient' && patientData) {
+      
+      // ✨ FIX: Destructure *without* notes_text
+      const {
+        prefix, first_name, middle_name, last_name,
+        date_of_birth, sex, phone_number,
+        address, emergency_contact_name, 
+        emergency_contact_phone // <-- notes_text is removed
+      } = patientData;
+
+      // ✨ FIX: Update query *without* notes_text
+      await connection.execute(
+        `UPDATE patients SET prefix = ?, first_name = ?, middle_name = ?, last_name = ?,
+         date_of_birth = ?, sex = ?, phone_number = ?, address = ?, 
+         emergency_contact_name = ?, emergency_contact_phone = ?
+         WHERE user_id = ?`, // <-- notes_text = ? is removed
+        [
+          prefix, first_name, middle_name, last_name,
+          date_of_birth, sex, phone_number,
+          address, emergency_contact_name, 
+          emergency_contact_phone, // <-- notes_text is removed
+          userId 
+        ]
+      );
+    }
+
+    // 5. Commit the transaction
+    await connection.commit();
+    res.json({ status: 'ok', message: 'Profile updated successfully' });
+
+  } catch (err) {
+    if (connection) await connection.rollback();
+    console.error(`Error in PUT /api/profile for user ${userId}:`, err);
+    res.status(500).json({ error: 'Database error', detail: err.message });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+app.post('/api/profile/change-password', authMiddleware, async (req, res) => {
+  const userId = req.user.uid;
+  const { currentPassword, newPassword } = req.body;
+
+  // 1. Validation
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current and new password are required' });
+  }
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: 'New password must be at least 8 characters long' });
+  }
+
+  try {
+    // 2. Get the user's current password hash from the DB
+    const [rows] = await pool.execute(
+      'SELECT password_hash FROM users WHERE user_id = ?',
+      [userId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const user = rows[0];
+    
+    // 3. Check if the submitted 'currentPassword' matches the one in the DB
+    const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Incorrect current password' });
+    }
+
+    // 4. Hash the new password
+    const newHashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // 5. Update the user's password in the DB
+    await pool.execute(
+      'UPDATE users SET password_hash = ? WHERE user_id = ?',
+      [newHashedPassword, userId]
+    );
+
+    res.json({ status: 'ok', message: 'Password updated successfully' });
+
+  } catch (err) {
+    console.error(`Error in POST /api/profile/change-password for user ${userId}:`, err);
+    res.status(500).json({ error: 'Database error', detail: err.message });
+  }
+});
+
 // // --- Reports (placeholder for LLM integration) ---
 // app.post('/reports/generate', authMiddleware, async (req, res) => {
 //   const { patient_id, user_prompt } = req.body;

@@ -88,6 +88,7 @@ export function renderMainNav(containerEl, user) {
     : '';
 
   // Left: if authed -> full; else minimal
+  // ✨ 1. REMOVED Profile link from here
   const left = isAuthed
     ? `
       <a href="${pre}index.html">Home</a>
@@ -95,7 +96,6 @@ export function renderMainNav(containerEl, user) {
       ${patientsDropdown}
       ${reportsLink}
       ${analyticsLink}
-      <a href="${pre}profile.html" style="margin-left: auto;">Profile</a> 
     `
     : `
       <a href="${pre}index.html">Home</a>
@@ -103,9 +103,11 @@ export function renderMainNav(containerEl, user) {
       <a href="${pre}register.html">Register</a>
     `;
 
+  // ✨ 2. ADDED Profile link here, between email and logout
   const right = isAuthed
     ? `
       <span class="badge ok">${email}</span>
+      <a href="${pre}profile.html">Profile</a>
       <button id="jsLogout">Logout</button>
     `
     : `

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>User Profile</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style/profile.css" />
+</head>
+<body>
+  <h1>User Profile</h1>
+  <nav id="mainNav"></nav>
+
+  <div class="container form-container-page">
+    <div class="form-wrapper" style="width: 90%; border-radius: 1.5rem;">
+      <legend>My Details</legend>
+
+      <div id="my-details-table">
+        <p>Loading user data...</p>
+      </div>
+
+      <div class="button-row">
+        <button id="btnUpdateDetails" class="primary">Update Details</button>
+        <button id="btnChangePassword" class="primary">Change Password</button>
+      </div>
+      
+    </div>
+  </div>
+
+  <script type="module" src="js/common.js"></script>
+  <script type="module" src="js/profile.js"></script>
+</body>
+</html>

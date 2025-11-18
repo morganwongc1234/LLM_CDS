@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Update Profile</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style/patient_register.css" />
+  <link rel="stylesheet" href="style/profile.css" /> 
+</head>
+<body>
+  <h1>Update Profile</h1>
+  <nav id="mainNav"></nav>
+
+  <div class="container" style="grid-template-columns: 1fr; width: 85%;">
+    <div class="registerPatientsForm">
+      <div class="form-wrapper">
+        <form id="editProfileForm">
+
+          <legend>My Account Details</legend>
+          <p>Your User ID and Email cannot be changed.</p>
+          
+          <div class="row">
+            <div class="col">
+              <label>User ID</label>
+              <input id="userId" disabled />
+            </div>
+            <div class="col">
+              <label>Email</label>
+              <input id="userEmail" disabled />
+            </div>
+          </div>
+
+          <div class="row nameRow">
+            <div class="col prefix">
+              <label>Prefix</label>
+              <select id="userPrefix">
+                <option value="">Select</option>
+                <option>Mr.</option>
+                <option>Ms.</option>
+                <option>Mrs.</option>
+                <option>Dr.</option>
+                <option>Prof.</option>
+              </select>
+            </div>
+            <div class="col">
+              <label>First name *</label>
+              <input id="userFirst" required />
+            </div>
+            <div class="col">
+              <label>Middle name</label>
+              <input id="userMiddle" placeholder="Optional" />
+            </div>
+            <div class="col">
+              <label>Last name *</label>
+              <input id="userLast" required />
+            </div>
+          </div>
+
+          <div id="patient-details-form" style="display: none; margin-top: 2rem;">
+            <legend>My Patient Details</legend>
+            <p>This information is linked to your patient record.</p>
+
+            <div class="row dobSexRow">
+              <div class="col">
+                <label>Date of Birth</label>
+                <input id="patDOB" type="date" />
+              </div>
+              <div class="col sex">
+                <label>Sex</label>
+                <select id="patSex">
+                  <option value="">Select</option>
+                  <option>M</option>
+                  <option>F</option>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row contactRow">
+              <div class="col">
+                <label>Phone</label>
+                <input id="patPhone" placeholder="0412 345 678" />
+              </div>
+            </div>
+
+            <label>Address Line 1</label>
+            <input id="patAddressLine1" />
+            
+            <label>Address Line 2</label>
+            <input id="patAddressLine2" placeholder="Optional" />
+
+            <div class="row">
+              <div class="col">
+                <label>Suburb</label>
+                <input id="patSuburb" />
+              </div>
+              <div class="col">
+                <label>City</label>
+                <input id="patCity" />
+              </div>
+              <div class="col">
+                <label>State</label>
+                <select id="patState">
+                  <option value="">Select</option>
+                  <option value="NSW">New South Wales</option>
+                  <option value="VIC">Victoria</option>
+                  <option value="QLD">Queensland</option>
+                  <option value="WA">Western Australia</option>
+                  <option value="SA">South Australia</option>
+                  <option value="TAS">Tasmania</option>
+                  <option value="ACT">Australian Capital Territory</option>
+                  <option value="NT">Northern Territory</option>
+                </select>
+              </div>
+              <div class="col">
+                <label>Postcode</label>
+                <input id="patPostcode" />
+              </div>
+            </div>
+
+            <div class="row emergencyRow">
+              <div class="col">
+                <label>Emergency Contact Full Name</label>
+                <input id="patEmergencyName" />
+              </div>
+              <div class="col">
+                <label>Emergency Contact Phone</label>
+                <input id="patEmergencyPhone" />
+              </div>
+            </div>
+
+            <label>Notes</label>
+            <textarea id="patNotes" rows="5"></textarea>
+          </div>
+
+          <div class="row" style="margin-top: 2rem; gap: 1rem;">
+            <div class="col" style="flex: 1;">
+              <button id="btnSaveChanges" type="submit" class="primary">Save Changes</button>
+            </div>
+            <div class="col" style="flex: 1;">
+              <button id="btnCancel" type="button" class="primary" style="width: 100%;">Cancel</button>
+            </div>
+          </div>
+
+          <pre id="outUpdate"></pre>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/common.js"></script>
+  <script type="module" src="js/profile_edit.js"></script>
+</body>
+</html>
