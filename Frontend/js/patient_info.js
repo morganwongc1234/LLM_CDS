@@ -7,12 +7,24 @@ import {
 
 const $ = (sel) => document.querySelector(sel);
 
-// This function will render the patient data
+// Helper to fetch the current user's role
+async function getCurrentUserRole() {
+  try {
+    const r = await apiGet('/me');
+    if (r.ok) {
+      const data = await r.json();
+      // Ensure role is lowercased for safe comparison
+      return data?.me?.role?.toLowerCase() || null; 
+    }
+  } catch {}
+  return null;
+}
+
+// This function will render the patient data (kept the same)
 function renderPatientDetail(patient) {
   const container = $('#patientInfo'); 
   if (!container) return;
 
-  // Render the patient data as a table
   container.innerHTML = `
     <h2>${[patient.prefix, patient.first_name, patient.last_name].filter(Boolean).join(' ')}</h2>
     
@@ -57,7 +69,7 @@ function renderPatientDetail(patient) {
         <tr>
           <td><strong>Notes:</strong></td>
           <td>
-            <pre>${patient.notes_text ?? 'No notes.'}</pre>
+            <pre style="margin: 0; white-space: pre-wrap; font-family: inherit;">${patient.notes_text ?? 'No notes.'}</pre>
           </td>
         </tr>
       </tbody>
@@ -65,22 +77,13 @@ function renderPatientDetail(patient) {
   `;
 }
 
-// ✨ ADD THIS FUNCTION to wire the new button
-function wireButton(patientId) {
-  $('#btnUpdatePatientDetails')?.addEventListener('click', () => {
-    // Go to a new edit page, passing the patient ID
-    window.location.href = `patient_edit.html?id=${patientId}`;
-  });
-}
 
-// This function will run when the page loads
 async function initPage() {
   await initHeader();
   if (!requireAuthGuard()) return;
 
   const container = $('#patientInfo');
-
-  // 1. Get the patient ID from the URL
+  
   const urlParams = new URLSearchParams(window.location.search);
   const patientId = urlParams.get('id');
 
@@ -88,22 +91,39 @@ async function initPage() {
     container.innerHTML = '<p class="error">Error: No patient ID found in URL.</p>';
     return;
   }
+  
+  // ✨ Get the user's role
+  const role = await getCurrentUserRole();
+  const btnUpdate = $('#btnUpdatePatientDetails');
 
-  // 2. Fetch the data from our new API endpoint
+  // ✨ Role Check: Disable button if Admin
+  if (role === 'admin') {
+    if (btnUpdate) {
+        btnUpdate.disabled = true;
+        btnUpdate.textContent = 'Editing Not Permitted (Admin)';
+        btnUpdate.style.opacity = 0.5;
+        btnUpdate.style.cursor = 'not-allowed';
+    }
+  } else {
+    // Only wire the button if it's NOT an Admin
+    if (btnUpdate) {
+      btnUpdate.onclick = () => {
+        window.location.href = `patient_edit.html?id=${patientId}`;
+      };
+    }
+  }
+
+  // Fetch the patient data
   try {
     const r = await apiGet(`/patients/${patientId}`);
     const data = await r.json();
 
     if (!r.ok) {
-      container.innerHTML = `<p class="error">${data.error || 'Could not fetch patient data.'}</p>`;
+      container.innerHTML = `<p class="error">Error: ${data.error || 'Could not fetch patient data.'}</p>`;
       return;
     }
 
-    // 3. Render the data
     renderPatientDetail(data);
-
-    // 4. ✨ Wire up the button
-    wireButton(patientId);
 
   } catch (err) {
     console.error('Fetch error:', err);

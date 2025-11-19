@@ -45,6 +45,17 @@ function authMiddleware(req, res, next) {
   }
 }
 
+// Helper to define which columns a role is allowed to see
+const getPatientColumns = (role) => {
+  // Clinicians and Researchers see everything ('*')
+  if (role === 'clinician' || role === 'researcher') {
+    return '*';
+  }
+  
+  // Admin role: Omit sensitive PII (phone, address, emergency contacts, notes)
+  return 'patient_id, user_id, prefix, first_name, middle_name, last_name, date_of_birth, sex, email, created_at';
+};
+
 // --- Health check ---
 app.get('/api/health', (req, res) => res.send('✅ Server is healthy'));
 
@@ -350,11 +361,11 @@ app.delete('/users/:id', authMiddleware, async (req, res) => {
 
 // --- Patients (protected) ---
 app.get('/patients', authMiddleware, async (req, res) => {
+  const columns = getPatientColumns(req.user.role); // Dynamically select columns
   try {
-    const [rows] = await pool.execute('SELECT * FROM patients ORDER BY patient_id DESC');
+    const [rows] = await pool.execute(`SELECT ${columns} FROM patients ORDER BY patient_id DESC`);
     res.json(rows);
   } catch (err) {
-    // ✨ ADDED LOGGING
     console.error('Error in GET /patients:', err);
     res.status(500).json({ error: 'Database error', detail: err.message });
   }
@@ -459,6 +470,7 @@ app.post('/patients', authMiddleware, async (req, res) => {
 // --- Search patients ---
 app.get('/patients/search', authMiddleware, async (req, res) => {
   const { last_name, first_name, date_of_birth } = req.query;
+  const columns = getPatientColumns(req.user.role); // Dynamically select columns
 
   if (!last_name) return res.status(400).json({ error: 'last_name required' });
 
@@ -477,7 +489,7 @@ app.get('/patients/search', authMiddleware, async (req, res) => {
     }
     
     const [rows] = await pool.execute(
-      `SELECT * FROM patients WHERE ${conditions.join(' AND ')}`,
+      `SELECT ${columns} FROM patients WHERE ${conditions.join(' AND ')}`, // Use dynamic columns
       params
     );
     res.json(rows);
@@ -490,15 +502,15 @@ app.get('/patients/search', authMiddleware, async (req, res) => {
 // --- Get single patient by ID ---
 app.get('/patients/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
-  
-  // Check if ID is a valid number
+  const columns = getPatientColumns(req.user.role); // Dynamically select columns
+
   if (isNaN(Number(id))) {
     return res.status(400).json({ error: 'Invalid patient ID format' });
   }
 
   try {
     const [rows] = await pool.execute(
-      'SELECT * FROM patients WHERE patient_id = ?',
+      `SELECT ${columns} FROM patients WHERE patient_id = ?`, // Use dynamic columns
       [id]
     );
 
@@ -506,7 +518,7 @@ app.get('/patients/:id', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Patient not found' });
     }
 
-    res.json(rows[0]); // Send back the single patient object
+    res.json(rows[0]);
 
   } catch (err) {
     console.error(`Error in GET /patients/${id}:`, err);
