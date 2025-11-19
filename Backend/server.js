@@ -311,6 +311,43 @@ app.put('/users/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// --- Delete User (Admin Only) ---
+app.delete('/users/:id', authMiddleware, async (req, res) => {
+  // 1. Security Check: Admins only
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied. Admins only.' });
+  }
+
+  const targetUserId = req.params.id;
+
+  // 2. Prevent self-deletion
+  if (parseInt(targetUserId) === req.user.uid) {
+    return res.status(400).json({ error: 'You cannot delete your own account.' });
+  }
+
+  try {
+    // 3. Execute Delete
+    const [result] = await pool.execute('DELETE FROM users WHERE user_id = ?', [targetUserId]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ status: 'ok', message: 'User deleted successfully' });
+
+  } catch (err) {
+    // 4. Handle Foreign Key Constraints (e.g., User is an author of EHR notes)
+    if (err.code === 'ER_ROW_IS_REFERENCED_2') {
+      return res.status(409).json({ 
+        error: 'Cannot delete user. This user has created clinical records or is linked to other critical data.' 
+      });
+    }
+    
+    console.error(`Error in DELETE /users/${targetUserId}:`, err);
+    res.status(500).json({ error: 'Database error', detail: err.message });
+  }
+});
+
 // --- Patients (protected) ---
 app.get('/patients', authMiddleware, async (req, res) => {
   try {

@@ -36,6 +36,13 @@ export async function apiPut(path, body) {
   });
 }
 
+export async function apiDelete(path) {
+  return fetch(API_BASE + path, {
+    method: 'DELETE',
+    headers: authHeaders()
+  });
+}
+
 // ------- Path prefix helper (so links work from /homepage/* too) -------
 function prefixToRoot() {
   // If this page lives in /homepage/, links need "../"
