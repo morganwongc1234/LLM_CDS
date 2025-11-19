@@ -1,4 +1,4 @@
-import { apiGet, initHeader, requireAuthGuard, formatDate } from './common.js';
+import { apiGet, apiDelete, initHeader, requireAuthGuard, formatDate } from './common.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -10,12 +10,11 @@ function renderTable(data) {
   const p = data.patient;
 
   // 1. Construct the display object explicitly to control the Order
-  //    Order: User ID -> Patient ID (if exists) -> Role -> Name -> Email -> Created
   const displayData = {
     "User ID": u.user_id,
   };
 
-  // ✨ Add Patient ID immediately after User ID
+  // Add Patient ID immediately after User ID, if the record exists
   if (p) {
     displayData["Patient ID"] = p.patient_id;
   }
@@ -54,7 +53,40 @@ async function initPage() {
   // Setup Buttons
   $('#btnBack').onclick = () => window.location.href = 'users.html';
   $('#btnEditUser').onclick = () => window.location.href = `user_edit.html?id=${userId}`;
-  $('#btnDeleteUser').onclick = () => alert('Delete functionality coming next!');
+  
+  // Delete Logic (using standard browser confirm)
+  $('#btnDeleteUser').onclick = async () => {
+    // This is the browser confirmation popup
+    if (!confirm('⚠️ Are you sure you want to delete this user?\n\nThis action cannot be undone.')) {
+      return;
+    }
+
+    // Disable button and show loading state
+    const btn = $('#btnDeleteUser');
+    btn.disabled = true;
+    btn.textContent = 'Deleting...';
+
+    try {
+      const r = await apiDelete(`/users/${userId}`);
+      const data = await r.json();
+
+      if (r.ok) {
+        alert('User deleted successfully.');
+        window.location.href = 'users.html'; // Redirect back to list
+      } else {
+        alert(`Error: ${data.error || 'Could not delete user.'}`);
+        btn.disabled = false;
+        btn.textContent = 'Delete User';
+      }
+    } catch (err) {
+      console.error(err);
+      alert('A network error occurred.');
+      btn.disabled = false;
+      btn.textContent = 'Delete User';
+    }
+  };
+
+  // ... (rest of existing fetch logic) ...
 
   try {
     const r = await apiGet(`/users/${userId}`);
@@ -65,7 +97,7 @@ async function initPage() {
       return;
     }
 
-    renderTable(data);
+    renderTable(data); // <-- This will now find the function above
 
   } catch (err) {
     console.error(err);
