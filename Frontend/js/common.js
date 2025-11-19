@@ -69,36 +69,48 @@ export function renderMainNav(containerEl, user) {
   else if (role === 'patient') dashboardHref = `${pre}homepage/patient.html`;
 
   // --- PERMISSION FLAGS ---
-  const isMedicalStaff = role === 'clinician' || role === 'researcher';
   const isAdmin = role === 'admin';
+  const isMedicalStaff = role === 'clinician' || role === 'researcher';
 
-  // 1. Patients Dropdown (Medical Staff ONLY)
-  const patientsDropdown = isMedicalStaff
-    ? `
-    <div class="dropdown">
-      <button class="dropbtn" type="button" style="font-weight:700;">
-        Patients 
-      </button>
-      <div class="dropdown-content" role="menu">
-        <a href="${pre}patients_list.html" role="menuitem">Patients List</a>
-        <a href="${pre}patient_register.html" role="menuitem">Register Patient</a>
-      </div>
-    </div>
-  ` : '';
-
-  // 2. Reports & Analytics (Medical Staff ONLY)
-  const reportsLink = isMedicalStaff ? `<a href="${pre}reports.html">Reports</a>` : '';
-  const analyticsLink = isMedicalStaff ? `<a href="${pre}analytics.html">Analytics</a>` : '';
-
-  // 3. Users Tab (Admins ONLY)
+  // --- CONDITIONAL NAVIGATION LINKS ---
+  let patientsLinkHTML = '';
+  let reportsLink = '';
+  let analyticsLink = '';
   const usersLink = isAdmin ? `<a href="${pre}users.html">Users</a>` : '';
+
+
+  if (isAdmin) {
+      // ADMIN: Only a direct link to the list
+      patientsLinkHTML = `<a href="${pre}patients_list.html">Patients</a>`;
+  } else if (isMedicalStaff) {
+      // CLINICIAN/RESEARCHER: Dropdown for Patient List + Register
+      patientsLinkHTML = `
+        <div class="dropdown">
+          <button class="dropbtn" type="button" style="font-weight:700;">
+            Patients 
+          </button>
+          <div class="dropdown-content" role="menu">
+            <a href="${pre}patients_list.html" role="menuitem">Patients List</a>
+            <a href="${pre}patient_register.html" role="menuitem">Register Patient</a>
+          </div>
+        </div>
+      `;
+      // Clinician/Researcher also get Reports/Analytics
+      reportsLink = `<a href="${pre}reports.html">Reports</a>`;
+      analyticsLink = `<a href="${pre}analytics.html">Analytics</a>`;
+  }
+
 
   // Left Nav Links
   const left = isAuthed
     ? `
       <a href="${pre}index.html">Home</a>
       <a href="${dashboardHref}">Dashboard</a>
-      ${usersLink}       ${patientsDropdown} ${reportsLink}      ${analyticsLink}    `
+      ${usersLink}
+      ${patientsLinkHTML}
+      ${reportsLink}
+      ${analyticsLink}
+    `
     : `
       <a href="${pre}index.html">Home</a>
       <a href="${pre}login.html">Login</a>
@@ -133,7 +145,7 @@ export function renderMainNav(containerEl, user) {
     });
   }
 
-  // Dropdown wiring
+  // Dropdown wiring (only needed for the Clinician/Researcher dropdown)
   const dd = containerEl.querySelector('.dropdown');
   const btn = containerEl.querySelector('.dropbtn');
   if (dd && btn) {
