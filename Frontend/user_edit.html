@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Edit User</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style/patient_register.css" />
+  <link rel="stylesheet" href="style/profile.css" />
+</head>
+<body>
+  <h1>Edit User Details</h1>
+  <nav id="mainNav"></nav>
+
+  <div class="container form-container-page">
+    <div class="registerPatientsForm">
+      <div class="form-wrapper">
+        <legend>Edit User Account</legend>
+        <form id="editUserForm">
+
+          <div class="row">
+            <div class="col">
+              <label>User ID</label>
+              <input id="userId" disabled style="background-color: #f3f4f6;" />
+            </div>
+            <div class="col">
+              <label>Role (Admin Only)</label>
+              <select id="userRole">
+                <option value="clinician">Clinician</option>
+                <option value="researcher">Researcher</option>
+                <option value="admin">Admin</option>
+                <option value="patient">Patient</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row nameRow">
+            <div class="col prefix">
+              <label>Prefix</label>
+              <select id="userPrefix">
+                <option value="">Select</option>
+                <option>Mr.</option>
+                <option>Ms.</option>
+                <option>Mrs.</option>
+                <option>Dr.</option>
+                <option>Prof.</option>
+              </select>
+            </div>
+            <div class="col">
+              <label>First name *</label>
+              <input id="userFirst" required />
+            </div>
+            <div class="col">
+              <label>Middle name</label>
+              <input id="userMiddle" placeholder="Optional" />
+            </div>
+            <div class="col">
+              <label>Last name *</label>
+              <input id="userLast" required />
+            </div>
+          </div>
+
+          <label>Email Address *</label>
+          <input id="userEmail" type="email" required />
+
+
+          <div id="patient-identity-section" style="display: none; margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem;">
+            <legend style="font-size: 1.2rem; margin-bottom: 1rem;">Linked Patient Identity</legend>
+            <p class="note">Use the "Manage Patients" dashboard to edit clinical notes.</p>
+
+            <div class="row dobSexRow">
+              <div class="col">
+                <label>Date of Birth</label>
+                <input id="patDOB" type="date" />
+              </div>
+              <div class="col sex">
+                <label>Sex</label>
+                <select id="patSex">
+                  <option value="">Select</option>
+                  <option>M</option>
+                  <option>F</option>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row contactRow">
+              <div class="col">
+                <label>Phone</label>
+                <input id="patPhone" />
+              </div>
+            </div>
+
+            <label>Address</label>
+            <input id="patAddress" placeholder="Full Address" />
+          </div>
+
+          <div class="button-row">
+            <button id="btnSaveChanges" type="submit" class="primary">Save Changes</button>
+            <button id="btnCancel" type="button" class="secondary">Cancel</button>
+          </div>
+
+          <pre id="outUpdate"></pre>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/common.js"></script>
+  <script type="module" src="js/user_edit.js"></script>
+</body>
+</html>

@@ -321,8 +321,6 @@ button.secondary {
   cursor: pointer;
   transition: background-color 0.2s ease;
   display: block;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 button.secondary:hover {
@@ -570,4 +568,12 @@ footer {
   margin-top: 3rem;
   color: var(--color-text-muted);
   font-size: 0.9rem;
+}
+
+.form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 2rem;
+  background-color: var(--color-surface);
 }

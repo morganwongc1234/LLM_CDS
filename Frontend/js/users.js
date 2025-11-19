@@ -6,20 +6,28 @@ const $ = (sel) => document.querySelector(sel);
 let lastEl, firstEl, roleEl, btnFilter, container;
 
 function renderUsersTable(users) {
+  // 'container' is the global variable we defined at the top of the file
   if (!users || users.length === 0) {
     container.innerHTML = '<p>No users found matching your criteria.</p>';
     return;
   }
 
-  const rows = users.map(u => `
-    <tr>
-      <td>${u.user_id}</td>
-      <td>${[u.prefix, u.first_name, u.last_name].filter(Boolean).join(' ')}</td>
-      <td>${u.email}</td>
-      <td><span class="status neutral">${u.role}</span></td>
-      <td>${formatDate(u.created_at)}</td>
-    </tr>
-  `).join('');
+  const rows = users.map(u => {
+    const roleClass = u.role || 'neutral'; 
+    
+    return `
+      <tr 
+        class="clickable-row" 
+        onclick="window.location.href='user_detail.html?id=${u.user_id}'"
+      >
+        <td>${u.user_id}</td>
+        <td>${[u.prefix, u.first_name, u.last_name].filter(Boolean).join(' ')}</td>
+        <td>${u.email}</td>
+        <td><span class="status ${roleClass}">${u.role}</span></td>
+        <td>${formatDate(u.created_at)}</td>
+      </tr>
+    `;
+  }).join('');
 
   container.innerHTML = `
     <table class="table">

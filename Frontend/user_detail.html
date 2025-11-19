@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>User Details</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style/profile.css" />
+</head>
+<body>
+  <h1>User Details</h1>
+  <nav id="mainNav"></nav>
+
+  <div class="container">
+    <div class="form">
+      <div class="form-wrapper">
+        <legend>User Information</legend>
+
+        <div id="userDetailTable">
+          <p>Loading...</p>
+        </div>
+
+        <div class="button-row">
+          <button id="btnEditUser" class="primary">Edit User</button> 
+          <button id="btnBack" class="secondary">Back to List</button>
+          <button id="btnDeleteUser" class="primary" style="background-color: #dc2626; margin-left: auto;">Delete User</button>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/common.js"></script>
+  <script type="module" src="js/user_detail.js"></script>
+</body>
+</html>

@@ -195,6 +195,122 @@ app.get('/users', authMiddleware, async (req, res) => {
   }
 });
 
+// --- Get Single User Details (Admin Only) ---
+app.get('/users/:id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied. Admins only.' });
+  }
+
+  const targetUserId = req.params.id;
+
+  try {
+    // 1. Fetch user basics
+    const [userRows] = await pool.execute(
+      'SELECT user_id, prefix, first_name, middle_name, last_name, email, role, created_at FROM users WHERE user_id = ?',
+      [targetUserId]
+    );
+
+    if (userRows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const targetUser = userRows[0];
+    let responseData = { user: targetUser };
+
+    // 2. If 'patient', fetch ONLY the linked patient_id
+    //    (We removed DOB, phone, address, etc. as requested)
+    if (targetUser.role === 'patient') {
+      const [patientRows] = await pool.execute(
+        `SELECT patient_id FROM patients WHERE user_id = ?`,
+        [targetUserId]
+      );
+      
+      if (patientRows.length > 0) {
+        responseData.patient = patientRows[0];
+      }
+    }
+
+    res.json(responseData);
+
+  } catch (err) {
+    console.error(`Error in GET /users/${targetUserId}:`, err);
+    res.status(500).json({ error: 'Database error', detail: err.message });
+  }
+});
+
+// --- Update ANY User (Admin Only) ---
+app.put('/users/:id', authMiddleware, async (req, res) => {
+  // 1. Security Check
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied. Admins only.' });
+  }
+
+  const targetUserId = req.params.id;
+  const { user, patient } = req.body; // Expect nested objects like profile update
+
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // 2. Update the USERS table (Login info)
+    // Note: Admins can update email and role, which users can't do themselves
+    if (user) {
+      await connection.execute(
+        `UPDATE users SET 
+           prefix = ?, first_name = ?, middle_name = ?, last_name = ?, 
+           email = ?, role = ?
+         WHERE user_id = ?`,
+        [
+          user.prefix, user.first_name, user.middle_name, user.last_name,
+          user.email, user.role,
+          targetUserId
+        ]
+      );
+    }
+
+    // 3. If target is a 'patient' and patient data is provided, update PATIENTS table
+    if (patient) {
+      const {
+        prefix, first_name, middle_name, last_name,
+        date_of_birth, sex, phone_number,
+        address, emergency_contact_name, 
+        emergency_contact_phone
+      } = patient;
+
+      await connection.execute(
+        `UPDATE patients SET 
+           prefix = ?, first_name = ?, middle_name = ?, last_name = ?,
+           date_of_birth = ?, sex = ?, phone_number = ?, address = ?, 
+           email = ?, emergency_contact_name = ?, emergency_contact_phone = ?
+         WHERE user_id = ?`,
+        [
+          prefix, first_name, middle_name, last_name,
+          date_of_birth, sex, phone_number, address,
+          user.email, // Sync email from the user object
+          emergency_contact_name, emergency_contact_phone,
+          targetUserId
+        ]
+      );
+    }
+
+    await connection.commit();
+    res.json({ status: 'ok', message: 'User updated successfully' });
+
+  } catch (err) {
+    if (connection) await connection.rollback();
+    
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ error: 'Email is already in use by another user.' });
+    }
+
+    console.error(`Error in PUT /users/${targetUserId}:`, err);
+    res.status(500).json({ error: 'Database error', detail: err.message });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
 // --- Patients (protected) ---
 app.get('/patients', authMiddleware, async (req, res) => {
   try {
