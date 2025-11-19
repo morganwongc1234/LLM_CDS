@@ -743,6 +743,93 @@ app.post('/api/profile/change-password', authMiddleware, async (req, res) => {
   }
 });
 
+// --- Admin/Clinician System Analytics / Metrics ---
+app.get('/api/admin/analytics', authMiddleware, async (req, res) => {
+  // 1. Security Check: Admin, Clinician, or Researcher only
+  const role = req.user.role;
+  if (role !== 'admin' && role !== 'clinician' && role !== 'researcher') {
+    return res.status(403).json({ error: 'Access denied. Only medical staff and admins can view analytics.' });
+  }
+
+  try {
+    // 2. Run all queries in parallel (queries return Promise<[rows, fields]>)
+    const totalUsers = pool.query('SELECT COUNT(*) AS count FROM users');
+    const totalPatients = pool.query('SELECT COUNT(*) AS count FROM patients');
+    const totalEHR = pool.query('SELECT COUNT(*) AS count FROM ehr_inputs');
+    const totalReports = pool.query('SELECT COUNT(*) AS count FROM llm_reports');
+    const usersByRole = pool.query('SELECT role, COUNT(*) AS count FROM users GROUP BY role ORDER BY count DESC');
+
+    // --- DEMOGRAPHIC QUERIES ---
+    const ageGroups = pool.query(`
+        SELECT
+            CASE 
+                WHEN date_of_birth IS NULL THEN 'N/A'
+                WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) < 18 THEN 'Under 18'
+                WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 18 AND 30 THEN '18-30'
+                WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 31 AND 50 THEN '31-50'
+                WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) > 50 THEN '51+'
+                ELSE 'Other'
+            END AS age_group,
+            COUNT(*) AS count
+        FROM patients
+        GROUP BY age_group
+        ORDER BY age_group
+    `);
+
+    const sexDistribution = pool.query(`
+        SELECT 
+            sex, 
+            COUNT(*) AS count 
+        FROM patients 
+        GROUP BY sex
+    `);
+
+    // ✨ LOCATION FIX: Extracts the State (second-to-last comma-separated value)
+    const locationDistribution = pool.query(`
+        SELECT 
+            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(address, ',', -2), ',', 1)) AS state,
+            COUNT(*) AS count
+        FROM patients
+        WHERE address IS NOT NULL AND address != ''
+        GROUP BY state
+        ORDER BY count DESC
+        LIMIT 5
+    `);
+    // --- END DEMOGRAPHIC QUERIES ---
+
+    // 3. Wait for all results
+    const [
+      usersCountResult,
+      patientsCountResult,
+      ehrCountResult,
+      reportsCountResult,
+      usersRoleDataResult,
+      ageGroupDataResult,
+      sexDataResult,
+      locationDataResult
+    ] = await Promise.all([totalUsers, totalPatients, totalEHR, totalReports, usersByRole, ageGroups, sexDistribution, locationDistribution]);
+
+    // 4. Extract the actual data rows (index 0) from each result
+    res.json({
+      // Scorecards: Access index [0][0] to get the count value
+      totalUsers: usersCountResult[0][0].count,
+      totalPatients: patientsCountResult[0][0].count,
+      totalEHRSubmissions: ehrCountResult[0][0].count,
+      totalReports: reportsCountResult[0][0].count,
+      
+      // Distribution Tables: Access index [0] to get the array of data objects
+      usersByRole: usersRoleDataResult[0],
+      ageGroups: ageGroupDataResult[0],
+      sexDistribution: sexDataResult[0],
+      topLocations: locationDataResult[0] // Now returns data grouped by 'state'
+    });
+
+  } catch (err) {
+    console.error('System Metrics Failed:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to retrieve metrics.' });
+  }
+});
+
 // // --- Reports (placeholder for LLM integration) ---
 // app.post('/reports/generate', authMiddleware, async (req, res) => {
 //   const { patient_id, user_prompt } = req.body;
