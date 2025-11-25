@@ -1,4 +1,4 @@
-// server.js — main Express backend for BIOM9450 CDS
+// Backend/server.js — main Express backend for BIOM9450 CDS
 import 'dotenv/config';
 import express from 'express';
 import mysql from 'mysql2/promise';
@@ -9,6 +9,11 @@ import jwt from 'jsonwebtoken';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
+import { startFlow, stepFlow } from './panel/orchestrator.js';
+import { parseEhrToSnapshot, snapshotToEhrDbFields } from './lib/ehr_parser.js';
+import { ragSearch } from './rag/search.js';
+import { ragSearchFaiss } from "./rag/search_faiss.js";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -45,13 +50,19 @@ function authMiddleware(req, res, next) {
   }
 }
 
+// Check if user is clinician/researcher/admin
+function isClinicalRole(user) {
+  if (!user) return false;
+  return ['clinician', 'researcher', 'admin'].includes(user.role);
+}
+
 // Helper to define which columns a role is allowed to see
 const getPatientColumns = (role) => {
   // Clinicians and Researchers see everything ('*')
   if (role === 'clinician' || role === 'researcher') {
     return '*';
   }
-  
+
   // Admin role: Omit sensitive PII (phone, address, emergency contacts, notes)
   return 'patient_id, user_id, prefix, first_name, middle_name, last_name, date_of_birth, sex, email, created_at';
 };
@@ -224,7 +235,7 @@ app.get('/users/:id', authMiddleware, async (req, res) => {
     if (userRows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     const targetUser = userRows[0];
     let responseData = { user: targetUser };
 
@@ -235,7 +246,7 @@ app.get('/users/:id', authMiddleware, async (req, res) => {
         `SELECT patient_id FROM patients WHERE user_id = ?`,
         [targetUserId]
       );
-      
+
       if (patientRows.length > 0) {
         responseData.patient = patientRows[0];
       }
@@ -285,7 +296,7 @@ app.put('/users/:id', authMiddleware, async (req, res) => {
       const {
         prefix, first_name, middle_name, last_name,
         date_of_birth, sex, phone_number,
-        address, emergency_contact_name, 
+        address, emergency_contact_name,
         emergency_contact_phone
       } = patient;
 
@@ -310,7 +321,7 @@ app.put('/users/:id', authMiddleware, async (req, res) => {
 
   } catch (err) {
     if (connection) await connection.rollback();
-    
+
     if (err.code === 'ER_DUP_ENTRY') {
       return res.status(400).json({ error: 'Email is already in use by another user.' });
     }
@@ -349,11 +360,11 @@ app.delete('/users/:id', authMiddleware, async (req, res) => {
   } catch (err) {
     // 4. Handle Foreign Key Constraints (e.g., User is an author of EHR notes)
     if (err.code === 'ER_ROW_IS_REFERENCED_2') {
-      return res.status(409).json({ 
-        error: 'Cannot delete user. This user has created clinical records or is linked to other critical data.' 
+      return res.status(409).json({
+        error: 'Cannot delete user. This user has created clinical records or is linked to other critical data.'
       });
     }
-    
+
     console.error(`Error in DELETE /users/${targetUserId}:`, err);
     res.status(500).json({ error: 'Database error', detail: err.message });
   }
@@ -412,7 +423,7 @@ app.post('/patients', authMiddleware, async (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?, 'patient')`,
       [prefix, first_name, middle_name, last_name, email, hashedPassword]
     );
-    
+
     const newUserId = userResult.insertId;
 
     // 6. ✨ THIS IS THE FIX ✨
@@ -454,13 +465,13 @@ app.post('/patients', authMiddleware, async (req, res) => {
         return res.status(400).json({ error: 'This email is already registered to a user.' });
       }
       if (err.message.includes('patients.user_id')) {
-         return res.status(400).json({ error: 'This user is already linked to a patient profile.' });
+        return res.status(400).json({ error: 'This user is already linked to a patient profile.' });
       }
     }
 
     console.error('Error in POST /patients (transaction):', err);
     res.status(500).json({ error: 'Database error during transaction', detail: err.message });
-  
+
   } finally {
     // Always release the connection back to the pool
     if (connection) connection.release();
@@ -482,12 +493,12 @@ app.get('/patients/search', authMiddleware, async (req, res) => {
       conditions.push('first_name LIKE ?');
       params.push(`${first_name}%`);
     }
-    
+
     if (date_of_birth) {
       conditions.push('date_of_birth = ?');
       params.push(date_of_birth);
     }
-    
+
     const [rows] = await pool.execute(
       `SELECT ${columns} FROM patients WHERE ${conditions.join(' AND ')}`, // Use dynamic columns
       params
@@ -556,7 +567,7 @@ app.put('/patients/:id', authMiddleware, async (req, res) => {
   if (!first_name || !last_name || !email) {
     return res.status(400).json({ error: 'First name, last name, and email are required' });
   }
-  
+
   try {
     // 4. Run the update query
     const [result] = await pool.execute(
@@ -603,7 +614,7 @@ app.get('/api/profile', authMiddleware, async (req, res) => {
     if (userRows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     const profileData = {
       user: userRows[0],
       patient: null // Default to null
@@ -615,7 +626,7 @@ app.get('/api/profile', authMiddleware, async (req, res) => {
         'SELECT * FROM patients WHERE user_id = ?',
         [userId]
       );
-      
+
       if (patientRows.length > 0) {
         profileData.patient = patientRows[0];
       }
@@ -657,12 +668,12 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
 
     // 4. If they are a patient and patient data was provided, update 'patients' table
     if (userRole === 'patient' && patientData) {
-      
+
       // ✨ FIX: Destructure *without* notes_text
       const {
         prefix, first_name, middle_name, last_name,
         date_of_birth, sex, phone_number,
-        address, emergency_contact_name, 
+        address, emergency_contact_name,
         emergency_contact_phone // <-- notes_text is removed
       } = patientData;
 
@@ -675,9 +686,9 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
         [
           prefix, first_name, middle_name, last_name,
           date_of_birth, sex, phone_number,
-          address, emergency_contact_name, 
+          address, emergency_contact_name,
           emergency_contact_phone, // <-- notes_text is removed
-          userId 
+          userId
         ]
       );
     }
@@ -717,9 +728,9 @@ app.post('/api/profile/change-password', authMiddleware, async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     const user = rows[0];
-    
+
     // 3. Check if the submitted 'currentPassword' matches the one in the DB
     const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
     if (!isMatch) {
@@ -816,7 +827,7 @@ app.get('/api/admin/analytics', authMiddleware, async (req, res) => {
       totalPatients: patientsCountResult[0][0].count,
       totalEHRSubmissions: ehrCountResult[0][0].count,
       totalReports: reportsCountResult[0][0].count,
-      
+
       // Distribution Tables: Access index [0] to get the array of data objects
       usersByRole: usersRoleDataResult[0],
       ageGroups: ageGroupDataResult[0],
@@ -838,6 +849,339 @@ app.get('/api/admin/analytics', authMiddleware, async (req, res) => {
 //   // TODO: integrate Mistral API (test2.js logic)
 //   res.json({ message: 'LLM generation placeholder', patient_id, user_prompt });
 // });
+
+// --- EHR parsing + CRUD ---
+app.post('/api/ehr/parse', authMiddleware, async (req, res) => {
+  try {
+    if (!isClinicalRole(req.user)) {
+      return res.status(403).json({ error: 'Only clinicians/researchers/admins may parse EHRs.' });
+    }
+
+    const { patient_id, ehr_text, locale } = req.body || {};
+
+    if (!patient_id || !ehr_text || !ehr_text.trim()) {
+      return res.status(400).json({ error: 'patient_id and ehr_text are required.' });
+    }
+
+    // Check patient exists
+    const [patientRows] = await pool.query(
+      'SELECT patient_id FROM patients WHERE patient_id = ?',
+      [patient_id]
+    );
+    if (patientRows.length === 0) {
+      return res.status(404).json({ error: 'Patient not found.' });
+    }
+
+    // 1) Parse to snapshot
+    const snapshot = await parseEhrToSnapshot(ehr_text, { locale });
+
+    // 2) Map to DB columns
+    const { labs_json, symptoms_json, history_text } = snapshotToEhrDbFields(snapshot, ehr_text);
+
+    // 3) Insert into ehr_inputs
+    const [insertResult] = await pool.query(
+      `INSERT INTO ehr_inputs (patient_id, author_user_id, labs_json, symptoms_json, history_text)
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        patient_id,
+        req.user.uid,
+        labs_json ? JSON.stringify(labs_json) : null,
+        symptoms_json ? JSON.stringify(symptoms_json) : null,
+        history_text || null
+      ]
+    );
+
+    const ehr_id = insertResult.insertId;
+
+    res.status(201).json({
+      ehr_id,
+      patient_id,
+      snapshot
+    });
+  } catch (err) {
+    console.error('POST /api/ehr/parse error:', err);
+    res.status(500).json({ error: 'Failed to parse and save EHR.' });
+  }
+});
+
+// Returns the stored snapshot (from symptoms_json) plus raw DB fields
+app.get('/api/ehr/:ehrId', authMiddleware, async (req, res) => {
+  try {
+    if (!isClinicalRole(req.user)) {
+      return res.status(403).json({ error: 'Access denied.' });
+    }
+
+    const ehrId = parseInt(req.params.ehrId, 10);
+    if (Number.isNaN(ehrId)) {
+      return res.status(400).json({ error: 'Invalid ehr_id.' });
+    }
+
+    const [rows] = await pool.query(
+      `SELECT ehr_id, patient_id, author_user_id, labs_json, symptoms_json, history_text, created_at
+       FROM ehr_inputs
+       WHERE ehr_id = ?`,
+      [ehrId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'EHR not found.' });
+    }
+
+    const row = rows[0];
+    let snapshot = null;
+
+    try {
+      snapshot = row.symptoms_json ? JSON.parse(row.symptoms_json) : null;
+    } catch (_) {
+      snapshot = null;
+    }
+
+    res.json({
+      ehr_id: row.ehr_id,
+      patient_id: row.patient_id,
+      author_user_id: row.author_user_id,
+      created_at: row.created_at,
+      snapshot,
+      labs_json: row.labs_json,
+      history_text: row.history_text
+    });
+  } catch (err) {
+    console.error('GET /api/ehr/:ehrId error:', err);
+    res.status(500).json({ error: 'Failed to fetch EHR.' });
+  }
+});
+
+// PUT /api/ehr/:ehrId
+// Body: { snapshot, ehr_text? }
+// Recomputes labs_json, symptoms_json, history_text from snapshot
+app.put('/api/ehr/:ehrId', authMiddleware, async (req, res) => {
+  try {
+    if (!isClinicalRole(req.user)) {
+      return res.status(403).json({ error: 'Access denied.' });
+    }
+
+    const ehrId = parseInt(req.params.ehrId, 10);
+    if (Number.isNaN(ehrId)) {
+      return res.status(400).json({ error: 'Invalid ehr_id.' });
+    }
+
+    const { snapshot, ehr_text } = req.body || {};
+    if (!snapshot || typeof snapshot !== 'object') {
+      return res.status(400).json({ error: 'snapshot object is required.' });
+    }
+
+    // Fetch to confirm it exists
+    const [rows] = await pool.query(
+      'SELECT ehr_id, history_text FROM ehr_inputs WHERE ehr_id = ?',
+      [ehrId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'EHR not found.' });
+    }
+
+    const existing = rows[0];
+    const rawText = ehr_text || existing.history_text || '';
+
+    const { labs_json, symptoms_json, history_text } = snapshotToEhrDbFields(snapshot, rawText);
+
+    await pool.query(
+      `UPDATE ehr_inputs
+       SET labs_json = ?, symptoms_json = ?, history_text = ?
+       WHERE ehr_id = ?`,
+      [
+        labs_json ? JSON.stringify(labs_json) : null,
+        symptoms_json ? JSON.stringify(symptoms_json) : null,
+        history_text || null,
+        ehrId
+      ]
+    );
+
+    res.json({ status: 'ok', ehr_id: ehrId });
+  } catch (err) {
+    console.error('PUT /api/ehr/:ehrId error:', err);
+    res.status(500).json({ error: 'Failed to update EHR.' });
+  }
+});
+
+// --- LLM Panel Reports ---
+// POST /api/reports/panel-from-ehr
+// Body: { ehr_id, max_steps?, certainty_threshold? }
+// Runs the multi-step panel (startFlow + stepFlow loop) and returns:
+// - overall_best_action: the action with the highest certainty across all steps
+// - best_by_action: best step for each of ASK / ORDER / COMMIT
+// - turns: all steps (action, certainty, rationale, etc.)
+app.post('/api/reports/panel-from-ehr', authMiddleware, async (req, res) => {
+  try {
+    if (!isClinicalRole(req.user)) {
+      return res.status(403).json({ error: 'Only clinical roles may generate panel reports.' });
+    }
+
+    const { ehr_id, max_steps, certainty_threshold } = req.body || {};
+    const ehrId = parseInt(ehr_id, 10);
+
+    if (Number.isNaN(ehrId)) {
+      return res.status(400).json({ error: 'Valid ehr_id is required.' });
+    }
+
+    const maxSteps = Math.min(Math.max(parseInt(max_steps || 20, 10), 1), 30);
+    const commitThreshold = typeof certainty_threshold === 'number'
+      ? certainty_threshold
+      : 0.8;
+
+    // Confirm EHR exists
+    const [ehrRows] = await pool.query(
+      'SELECT ehr_id FROM ehr_inputs WHERE ehr_id = ?',
+      [ehrId]
+    );
+    if (ehrRows.length === 0) {
+      return res.status(404).json({ error: 'EHR not found.' });
+    }
+
+    // Start a new flow
+    const { flowId } = await startFlow({ ehrId, patientJson: {} });
+
+    let stepIndex = 1;
+    let done = false;
+    let stagnantCount = 0;
+    let lastCertainty = 0;
+
+    const turns = [];
+
+    // Track best per action + overall
+    const bestByAction = {
+      ASK: null,
+      ORDER: null,
+      COMMIT: null
+    };
+    let overallBest = null;
+
+    while (!done && stepIndex <= maxSteps) {
+      const out = await stepFlow({ flowId, stepIndex });
+
+      const consensus = out.consensus || {};
+      const action = consensus.action || 'ASK';
+      const certainty = typeof consensus.certainty === 'number' ? consensus.certainty : 0;
+
+      turns.push({
+        step_index: stepIndex,
+        action,
+        certainty,
+        consensus
+      });
+
+      // Track best for that action
+      if (['ASK', 'ORDER', 'COMMIT'].includes(action)) {
+        const existing = bestByAction[action];
+        if (!existing || certainty > (existing.certainty ?? 0)) {
+          bestByAction[action] = {
+            step_index: stepIndex,
+            certainty,
+            consensus
+          };
+        }
+      }
+
+      // Track overall best
+      if (!overallBest || certainty > (overallBest.certainty ?? 0)) {
+        overallBest = {
+          action,
+          step_index: stepIndex,
+          certainty,
+          consensus
+        };
+      }
+
+      // --- RAG integration: pull guideline evidence based on the case ---
+      let ragEvidence = [];
+      try {
+        const clinicalQueryParts = [];
+
+        // Use chief complaint if available
+        if (overallBest?.consensus?.chief_complaint) {
+          clinicalQueryParts.push(`chief complaint: ${overallBest.consensus.chief_complaint}`);
+        }
+
+        // Add diagnosis if COMMIT state
+        if (overallBest?.action === 'COMMIT' && overallBest?.consensus?.diagnosis) {
+          clinicalQueryParts.push(`suspected diagnosis: ${overallBest.consensus.diagnosis}`);
+        }
+
+        const clinicalQuery =
+          clinicalQueryParts.join(' | ') ||
+          'guidelines for assessment and management of this presentation';
+
+        // use faiss
+        ragEvidence = await ragSearchFaiss(clinicalQuery, 5);
+
+      } catch (ragErr) {
+        console.error('RAG search failed:', ragErr);
+        ragEvidence = [];
+      }
+
+      res.json({
+        flow_id: flowId,
+        ehr_id: ehrId,
+        steps_run: turns.length,
+        overall_best_action: overallBest,
+        best_by_action: bestByAction,
+        turns,
+        guideline_evidence: ragEvidence
+      });
+
+      // Stagnation logic
+      if (Math.abs(certainty - lastCertainty) < 1e-3) {
+        stagnantCount++;
+      } else {
+        stagnantCount = 0;
+      }
+      lastCertainty = certainty;
+
+      if (
+        stagnantCount >= 5 ||
+        stepIndex >= maxSteps ||
+        (action === 'COMMIT' && certainty >= commitThreshold)
+      ) {
+        done = true;
+      }
+
+      if (!done) stepIndex++;
+    }
+
+    res.json({
+      flow_id: flowId,
+      ehr_id: ehrId,
+      steps_run: turns.length,
+      overall_best_action: overallBest,
+      best_by_action: bestByAction,
+      turns
+    });
+  } catch (err) {
+    console.error('POST /api/reports/panel-from-ehr error:', err);
+    res.status(500).json({ error: 'Failed to generate panel report.' });
+  }
+});
+
+// TEST FAISS RAG search
+app.post("/api/rag/test", async (req, res) => {
+  try {
+    const { query, top_k = 5 } = req.body;
+
+    if (!query) {
+      return res.status(400).json({ error: "Missing 'query' field" });
+    }
+
+    const results = await ragSearchFaiss(query, top_k);
+    res.json({
+      query,
+      top_k,
+      results
+    });
+  } catch (err) {
+    console.error("RAG test error:", err);
+    res.status(500).json({ error: "RAG test failed", details: err.message });
+  }
+});
 
 // --- Fallback (Frontend index) ---
 app.use((req, res) => {

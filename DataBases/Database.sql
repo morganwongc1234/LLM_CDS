@@ -114,6 +114,42 @@ CREATE TABLE literature_db (
   INDEX idx_lit_source (source, created_at)
 ) ENGINE = InnoDB;
 
+-- 8) LLM multi-step panel flows
+CREATE TABLE llm_flows (
+  flow_id CHAR(36) PRIMARY KEY,
+  ehr_id INT NOT NULL,
+  status ENUM('pending', 'ok', 'error') NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  finished_at TIMESTAMP NULL,
+  INDEX idx_llm_flows_ehr (ehr_id),
+  CONSTRAINT fk_llm_flows_ehr
+    FOREIGN KEY (ehr_id)
+    REFERENCES ehr_inputs(ehr_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE = InnoDB;
+
+CREATE TABLE panel_turns (
+  turn_id INT PRIMARY KEY AUTO_INCREMENT,
+  flow_id CHAR(36) NOT NULL,
+  step_index INT NOT NULL,
+  panel_json JSON NOT NULL,
+  action ENUM('ASK', 'ORDER', 'COMMIT') NOT NULL,
+  questions_json JSON NULL,
+  orders_json JSON NULL,
+  diagnosis_json JSON NULL,
+  certainty DECIMAL(4,3) NULL,
+  rationale TEXT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_panel_flow_step (flow_id, step_index),
+  CONSTRAINT fk_panel_flow
+    FOREIGN KEY (flow_id)
+    REFERENCES llm_flows(flow_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE = InnoDB;
+
+
 -- ============================================
 -- 8) Seed Data (Preset Users & Patients)
 --    All passwords are: qwer1122

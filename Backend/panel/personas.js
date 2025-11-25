@@ -14,7 +14,7 @@ Personas:
 After discussion, the panel must agree on one ACTION:
 - "ASK" -> up to 3 questions for the patient.
 - "ORDER" -> up to 3 diagnostic tests (after stewardship veto).
-- "COMMIT" -> if certainty ≥ 0.80, final diagnosis.
+- "COMMIT" -> final diagnosis.
 
 As a panel, your collective "certainty" (0.0–1.0) is a measurement of your average confidence in your decision every round.
 
