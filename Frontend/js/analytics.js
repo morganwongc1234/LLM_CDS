@@ -2,107 +2,243 @@ import { apiGet, initHeader, requireAuthGuard } from './common.js';
 
 const $ = (sel) => document.querySelector(sel);
 
-/**
- * Renders a standard two-column table from an array of distribution data.
- * @param {HTMLElement} containerEl - The element to inject the table into.
- * @param {string} title - Title for the table.
- * @param {Array<Object>} data - Array of objects from the API.
- * @param {string} keyField - Field name for the label (e.g., 'role', 'age_group')
- * @param {string} valueField - Field name for the count ('count')
- */
-function renderDistributionTable(containerEl, title, data, keyField, valueField) {
-  // Replace underscores and capitalize for display in the table headers
-  const displayKey = keyField.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-  const displayValue = valueField.replace(/\b\w/g, l => l.toUpperCase());
-  
-  const rows = data.map(item => {
-    // Handle NULL values (like for sex or location)
-    const key = item[keyField] === null ? 'N/A' : item[keyField]; 
-    return `
-      <tr>
-        <td>${key}</td>
-        <td>${item[valueField]}</td>
-      </tr>
-    `;
-  }).join('');
-
-  containerEl.innerHTML = `
-    <h3>${title}</h3>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>${displayKey}</th>
-          <th>${displayValue}</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
+// Register the plugin globally if it loaded successfully
+if (typeof ChartDataLabels !== 'undefined') {
+  Chart.register(ChartDataLabels);
 }
 
-
 /**
- * Safely handles the response from a fetch call, ensuring it can always
- * consume the body without SyntaxErrors, even if the body is empty or non-JSON.
+ * Class to manage a single Analytics Widget (Chart + Table + Toggles)
  */
+class AnalyticsWidget {
+  constructor(containerId, title, data, keyField, valueField) {
+    this.container = document.getElementById(containerId);
+    this.title = title;
+    this.data = data || [];
+    this.keyField = keyField;
+    this.valueField = valueField;
+    this.chartInstance = null;
+    this.currentView = 'bar'; // Default view
+
+    // Professional Color Palette
+    this.colors = [
+      '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe',
+      '#1e40af', '#1d4ed8', '#1e3a8a', '#172554', '#9ca3af'
+    ];
+
+    if(this.container) this.render();
+  }
+
+  render() {
+    this.container.innerHTML = `
+      <div class="widget-header">
+        <h3>${this.title}</h3>
+        <div class="view-controls">
+          <button class="view-btn" data-view="table">Table</button>
+          <button class="view-btn" data-view="pie">Pie</button>
+          <button class="view-btn active" data-view="bar">Bar</button>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas></canvas>
+      </div>
+      <div class="table-container" style="display: none;"></div>
+    `;
+
+    const buttons = this.container.querySelectorAll('.view-btn');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        buttons.forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        this.switchView(e.target.dataset.view);
+      });
+    });
+
+    this.switchView(this.currentView);
+  }
+
+  switchView(viewType) {
+    this.currentView = viewType;
+    const chartContainer = this.container.querySelector('.chart-container');
+    const tableContainer = this.container.querySelector('.table-container');
+
+    if (viewType === 'table') {
+      chartContainer.style.display = 'none';
+      tableContainer.style.display = 'block';
+      this.renderTable(tableContainer);
+    } else {
+      tableContainer.style.display = 'none';
+      chartContainer.style.display = 'block';
+      this.renderChart(viewType);
+    }
+  }
+
+  renderTable(container) {
+    if (container.innerHTML.trim() !== '') return;
+
+    const displayKey = this.keyField.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    
+    const total = this.data.reduce((sum, item) => sum + item[this.valueField], 0);
+
+    const rows = this.data.map(item => {
+      const val = item[this.valueField];
+      const pct = total > 0 ? ((val / total) * 100).toFixed(1) + '%' : '0.0%';
+      
+      return `
+      <tr>
+        <td>${item[this.keyField] ?? 'N/A'}</td>
+        <td>${val}</td>
+        <td>${pct}</td>
+      </tr>
+    `}).join('');
+
+    container.innerHTML = `
+      <table class="table">
+        <thead><tr><th>${displayKey}</th><th>Count</th><th>Percentage</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  renderChart(type) {
+    const canvas = this.container.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    if (this.chartInstance) {
+      this.chartInstance.destroy();
+    }
+
+    const labels = this.data.map(d => d[this.keyField] ?? 'N/A');
+    const values = this.data.map(d => d[this.valueField]);
+
+    const showDataLabels = (type === 'pie');
+
+    this.chartInstance = new Chart(ctx, {
+      type: type,
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Count',
+          data: values,
+          backgroundColor: this.colors,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+            padding: {
+                top: 30,
+                bottom: 30, 
+                left: 20,
+                right: 20
+            }
+        },
+        plugins: {
+          legend: { 
+            display: type === 'pie', 
+            position: 'right' 
+          },
+          datalabels: {
+            display: showDataLabels, 
+            formatter: (value, ctx) => {
+              let sum = 0;
+              let dataArr = ctx.chart.data.datasets[0].data;
+              dataArr.map(data => { sum += data; });
+              let percentage = (value * 100 / sum).toFixed(1) + "%";
+              return percentage;
+            },
+            color: (context) => {
+               const value = context.dataset.data[context.dataIndex];
+               const total = context.dataset.data.reduce((acc, curr) => acc + curr, 0);
+               return (value / total < 0.05) ? '#333' : '#fff';
+            },
+            anchor: (context) => {
+               const value = context.dataset.data[context.dataIndex];
+               const total = context.dataset.data.reduce((acc, curr) => acc + curr, 0);
+               return (value / total < 0.05) ? 'end' : 'center';
+            },
+            align: (context) => {
+               const value = context.dataset.data[context.dataIndex];
+               const total = context.dataset.data.reduce((acc, curr) => acc + curr, 0);
+               return (value / total < 0.05) ? 'end' : 'center';
+            },
+            offset: 6,
+            clamp: true,
+            overlap: false
+          }
+        },
+        scales: type === 'bar' ? {
+          y: { 
+              beginAtZero: true, 
+              ticks: { stepSize: 1 } 
+          },
+          x: { 
+              display: true,
+              ticks: {
+                  autoSkip: false,
+                  maxRotation: 90, 
+                  minRotation: 45 
+              }
+          } 
+        } : {
+          y: { display: false }, 
+          x: { display: false }
+        }
+      }
+    });
+  }
+}
+
+// --- Main Init ---
+
 async function getSafeResponseData(response) {
   try {
     return await response.json();
   } catch (e) {
     const text = await response.text();
-    return { 
-      error: `Server returned HTTP ${response.status}`, 
-      detail: text.length > 500 ? text.substring(0, 500) + '...' : text
-    };
+    return { error: `Server error ${response.status}`, detail: text };
   }
 }
-
 
 async function initAnalyticsPage() {
   await initHeader();
   if (!requireAuthGuard()) return;
-
-  const scorecards = [
-    { id: 'scTotalUsers', field: 'totalUsers' },
-    { id: 'scTotalPatients', field: 'totalPatients' },
-    { id: 'scTotalEHR', field: 'totalEHRSubmissions' },
-    { id: 'scTotalReports', field: 'totalReports' },
-  ];
-  
-  const tables = {
-    usersByRole: { id: 'tableUsersByRole', title: 'User Roles', key: 'role', value: 'count' },
-    ageGroups: { id: 'tableAgeGroups', title: 'Patient Age Distribution', key: 'age_group', value: 'count' },
-    sexDistribution: { id: 'tableSexDistribution', title: 'Patient Sex Distribution', key: 'sex', value: 'count' },
-    topLocations: { id: 'tableTopLocations', title: 'Top Patient Locations', key: 'state', value: 'count' },
-  };
 
   try {
     const r = await apiGet('/api/admin/analytics');
     const data = await getSafeResponseData(r);
 
     if (!r.ok) {
-      const errorEl = $('#analyticsScorecards');
-      errorEl.innerHTML = `<p class="error">❌ Error: ${data.error || 'Access Denied'}</p><pre>${data.detail || 'The server did not provide a detailed error message.'}</pre>`;
+      document.querySelector('.container').innerHTML = `<p class="error">Error: ${data.error}</p>`;
       return;
     }
 
-    console.log("Analytics Data Received:", data);
-
     // 1. Render Scorecards
-    scorecards.forEach(card => {
-      const el = $(`#${card.id}`);
-      if (el) el.textContent = data[card.field] ?? 'N/A';
+    ['scTotalUsers', 'scTotalPatients', 'scTotalEHR', 'scTotalReports'].forEach(id => {
+      // ✨ FIX: Correctly map scTotalUsers -> totalUsers
+      const key = id.replace('sc', ''); 
+      
+      const el = document.getElementById(id);
+      
+      // Generate default key (e.g., TotalUsers -> totalUsers)
+      let dataKey = key.charAt(0).toLowerCase() + key.slice(1);
+      
+      // Manual override for EHR (scTotalEHR -> totalEHRSubmissions)
+      if (id === 'scTotalEHR') dataKey = 'totalEHRSubmissions';
+      
+      if(el) el.textContent = data[dataKey] ?? 0;
     });
 
-    // 2. Render Tables (Checks added to prevent rendering if data is null)
-    if (data.usersByRole) renderDistributionTable($(`#${tables.usersByRole.id}`), tables.usersByRole.title, data.usersByRole, tables.usersByRole.key, tables.usersByRole.value);
-    if (data.ageGroups) renderDistributionTable($(`#${tables.ageGroups.id}`), tables.ageGroups.title, data.ageGroups, tables.ageGroups.key, tables.ageGroups.value);
-    if (data.sexDistribution) renderDistributionTable($(`#${tables.sexDistribution.id}`), tables.sexDistribution.title, data.sexDistribution, tables.sexDistribution.key, tables.sexDistribution.value);
-    if (data.topLocations) renderDistributionTable($(`#${tables.topLocations.id}`), tables.topLocations.title, data.topLocations, tables.topLocations.key, tables.topLocations.value);
+    // 2. Initialize Widgets
+    new AnalyticsWidget('widgetUsersByRole', 'User Roles', data.usersByRole, 'role', 'count');
+    new AnalyticsWidget('widgetAgeGroups', 'Patient Age', data.ageGroups, 'age_group', 'count');
+    new AnalyticsWidget('widgetSexDistribution', 'Patient Sex', data.sexDistribution, 'sex', 'count');
+    new AnalyticsWidget('widgetTopLocations', 'Top Locations', data.topLocations, 'state', 'count');
 
   } catch (err) {
-    console.error('Analytics Fetch Error:', err);
-    $('#analyticsScorecards').innerHTML = '<p class="error">A catastrophic network error occurred while fetching analytics data.</p>';
+    console.error('Analytics Init Error:', err);
   }
 }
 

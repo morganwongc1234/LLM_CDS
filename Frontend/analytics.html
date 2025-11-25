@@ -6,7 +6,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="style/homepage.css" />
-  <link rel="stylesheet" href="style/analytics.css" /> 
+  <link rel="stylesheet" href="style/analytics.css" />
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 </head>
 <body>
   <h1>System Analytics</h1>
@@ -24,13 +27,11 @@
 
     <div class="analytics-section">
       <h2>Demographic Distribution</h2>
-      <div class="table-grid">
-        
-        <div id="tableUsersByRole"><h3>User Roles</h3><p>Loading...</p></div>
-        <div id="tableAgeGroups"><h3>Patient Age Distribution</h3><p>Loading...</p></div>
-        <div id="tableSexDistribution"><h3>Patient Sex Distribution</h3><p>Loading...</p></div>
-        <div id="tableTopLocations"><h3>Top Patient Locations</h3><p>Loading...</p></div>
-        
+      <div class="charts-grid">
+        <div id="widgetUsersByRole" class="chart-card"></div>
+        <div id="widgetAgeGroups" class="chart-card"></div>
+        <div id="widgetSexDistribution" class="chart-card"></div>
+        <div id="widgetTopLocations" class="chart-card full-width"></div>
       </div>
     </div>
     

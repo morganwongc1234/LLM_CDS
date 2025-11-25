@@ -1,13 +1,21 @@
 /* Frontend/style/analytics.css */
 
+/* --- Layout --- */
 .scorecard-grid {
   display: grid;
-  /* Creates responsive columns that are at least 220px wide */
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2.5rem;
 }
 
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 5rem;
+  margin-top: 1rem;
+}
+
+/* --- Scorecards --- */
 .scorecard {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -24,10 +32,12 @@
 }
 
 .scorecard h3 {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--color-text-muted);
   margin-bottom: 0.5rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .scorecard .value {
@@ -36,27 +46,96 @@
   color: var(--color-primary);
 }
 
-.analytics-section {
-  margin-top: 2rem;
+/* --- Chart Cards (Widgets) --- */
+.chart-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 400px;
 }
 
-.analytics-section h2 {
-  border-bottom: 2px solid var(--color-border);
-  padding-bottom: 0.5rem;
+.chart-card.full-width {
+  grid-column: 1 / -1;
 }
 
-.table-grid {
-  /* Creates responsive columns for the tables */
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-top: 1rem;
+#widgetTopLocations {
+  min-height: 500px;
+}
+/* Widget Header (Title + Controls) */
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.75rem;
 }
 
-/* Ensure tables fill their container properly */
-#tableUsersByRole table,
-#tableAgeGroups table,
-#tableSexDistribution table,
-#tableTopLocations table {
+.widget-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--color-text);
+}
+
+/* Toggle Buttons */
+.view-controls {
+  display: flex;
+  background: var(--color-bg);
+  padding: 3px;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
+}
+
+.view-btn {
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 0.3rem;
+  transition: all 0.2s;
+}
+
+.view-btn:hover {
+  color: var(--color-primary);
+}
+
+.view-btn.active {
+  background-color: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Content Areas */
+.chart-container {
+  flex: 1;
+  position: relative;
   width: 100%;
+  min-height: 250px;
+}
+
+.table-container {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 300px;
+}
+
+.table-container table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table-container th {
+  position: sticky;
+  top: 0;
+  background: var(--color-bg);
+  z-index: 1;
 }
