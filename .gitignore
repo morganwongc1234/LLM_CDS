@@ -1,23 +1,132 @@
-# macOS
+########################################
+# macOS / OS
+########################################
 .DS_Store
+Thumbs.db
 
+########################################
 # Node dependencies
+########################################
 node_modules/
 
-# Environment files
+########################################
+# Environment files (DO NOT COMMIT)
+########################################
 .env
 *.env
 Backend/.env
+.env.*
+!.env.example
 
+########################################
 # Logs
+########################################
 *.log
+logs/
+debug.log
+*.pid
 
+########################################
 # Build artifacts
+########################################
 dist/
 build/
 coverage/
 tmp/
+Backend/tmp/
 
-# IDE settings
+########################################
+# IDE / Editor configs
+########################################
 .vscode/
 .idea/
+*.swp
+*.swo
+
+########################################
+# Python caches & virtualenvs
+########################################
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+venv/
+.venv/
+Backend/rag/.venv/
+
+########################################
+# RAG / FAISS (Large Files — EXCLUDE ALL)
+########################################
+
+# Entire RAG directory EXCEPT code
+Backend/rag/dataset/
+Backend/rag/data/
+Backend/rag/cache/
+Backend/rag/tmp/
+Backend/rag/chunks/
+Backend/rag/scraped/
+Backend/rag/downloads/
+Backend/rag/html/
+Backend/rag/pdf/
+Backend/rag/sources/
+Backend/rag/source_pages/
+Backend/rag/source_raw/
+Backend/rag/source_clean/
+
+# ⚠️ Include only code files inside rag/
+!Backend/rag/*.py
+!Backend/rag/*.js
+!Backend/rag/*.md
+
+########################################
+# Vector Index + Embedding Data
+########################################
+
+# Main huge files
+Backend/rag/vector_index.jsonl
+Backend/rag/vector_index.json
+Backend/rag/dataset.jsonl
+Backend/rag/dataset.json
+Backend/rag/metadata.jsonl
+
+# Chunked embedding arrays
+Backend/rag/*.npy
+Backend/rag/*.npz
+Backend/rag/*.pkl
+Backend/rag/*.bin
+
+########################################
+# FAISS Indexes & Metadata (Massive)
+########################################
+Backend/rag/medical_rag.index
+Backend/rag/*.index
+Backend/rag/*.faiss
+Backend/rag/medical_rag_meta.jsonl
+Backend/rag/*_meta.jsonl
+
+########################################
+# Guideline Downloads (PDF/HTML/Text)
+########################################
+Backend/rag/**/*.pdf
+Backend/rag/**/*.html
+Backend/rag/**/*.htm
+Backend/rag/**/*.txt
+Backend/rag/**/*.xml
+Backend/rag/**/*.docx
+Backend/rag/**/*.json
+
+# Also exclude direct root PDFs/HTMLs
+Backend/rag/*.pdf
+Backend/rag/*.html
+Backend/rag/*.htm
+Backend/rag/*.txt
+
+########################################
+# SQL dumps (large + sensitive)
+########################################
+*.sql
+*.sql.gz
+*.dump
+*.db
+*.sqlite
