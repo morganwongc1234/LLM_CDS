@@ -125,7 +125,7 @@ Backend/rag/*.txt
 ########################################
 # SQL dumps (large + sensitive)
 ########################################
-*.sql
+# *.sql
 *.sql.gz
 *.dump
 *.db
