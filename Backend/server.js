@@ -11,7 +11,7 @@ import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import { startFlow, stepFlow } from './panel/orchestrator.js';
 import { parseEhrToSnapshot, snapshotToEhrDbFields } from './lib/ehr_parser.js';
-import { ragSearch } from './rag/search.js';
+
 import { ragSearchFaiss } from "./rag/search_faiss.js";
 
 
