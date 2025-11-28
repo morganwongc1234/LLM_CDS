@@ -1,5 +1,3 @@
-/* Frontend/style/patient_register.css */
-
 .registerPatientsForm {
   display: flex;
   justify-content: center;
@@ -13,7 +11,6 @@
   margin: 0 auto;
 }
 
-/* --- Grid Layout --- */
 .row {
   display: flex;
   flex-wrap: wrap;
@@ -28,26 +25,21 @@
   min-width: 200px;
 }
 
-/* --- ✨ FIX: Specific Column Sizing ✨ --- */
 
-/* Make the Prefix column small and fixed width */
 .col-prefix {
   flex: 0 0 100px !important;
   min-width: 80px !important; 
 }
 
-/* ✨ NEW: A generic short column for Sex, State, etc. */
 .col-short {
-  flex: 0 0 120px !important; /* Fixed narrow width */
+  flex: 0 0 120px !important;
   min-width: 100px !important;
 }
 
-/* Make name fields take up the remaining space equally */
 .col-wide {
   flex: 1;
 }
 
-/* --- Input Alignment & Sizing --- */
 label {
   margin-bottom: 0.3rem;
   font-weight: 600;
@@ -70,14 +62,12 @@ textarea {
 
 #patSex { width: 30%; margin-left: 0;}
 
-/* --- Error Message Spacing --- */
 .field-error {
   min-height: 20px; 
   margin-top: 2px;
   font-size: 0.85rem;
 }
 
-/* --- Buttons --- */
 .row button {
   width: 100%;
   margin-top: 1rem;

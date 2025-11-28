@@ -17,9 +17,8 @@
       <div class="form-wrapper">
         <legend>Register New Patient</legend>
 
-        <!-- Name Fields Row -->
-        <div class="row nameRow">
-          <div class="col prefix">
+        <div class="row name-row">
+          <div class="col col-prefix">
             <label>Prefix *</label>
             <select id="patPrefix" required>
               <option value="">Select</option>
@@ -31,31 +30,33 @@
             </select>
             <small class="field-error" id="errPrefix"></small>
           </div>
-          <div class="col">
+          
+          <div class="col col-wide">
             <label>First name *</label>
             <input id="patFirst" placeholder="First name" required />
             <small class="field-error" id="errFirst"></small>
           </div>
-          <div class="col">
+          
+          <div class="col col-wide">
             <label>Middle name</label>
             <input id="patMiddle" placeholder="Middle name (optional)" />
             <small class="field-error" id="errMiddle"></small>
           </div>
-          <div class="col">
+          
+          <div class="col col-wide">
             <label>Last name *</label>
             <input id="patLast" placeholder="Last name" required />
             <small class="field-error" id="errLast"></small>
           </div>
         </div>
 
-        <!-- DOB & Sex Row -->
         <div class="row dobSexRow">
           <div class="col">
             <label>Date of Birth *</label>
             <input id="patDOB" type="date" required />
             <small class="field-error" id="errDOB"></small>
           </div>
-          <div class="col sex">
+          <div class="col">
             <label>Sex *</label>
             <select id="patSex" required>
               <option value="">Select</option>
@@ -67,7 +68,6 @@
           </div>
         </div>
 
-        <!-- Contact Info Row -->
         <div class="row contactRow">
           <div class="col">
             <label>Phone *</label>
@@ -81,7 +81,6 @@
           </div>
         </div>
 
-        <!-- Address Fields -->
         <label>Address Line 1 *</label>
         <input id="patAddressLine1" placeholder="e.g. 24 Example Street" required />
         <small class="field-error" id="errAddress1"></small>
@@ -103,18 +102,18 @@
             <small class="field-error" id="errCity"></small>
           </div>
 
-          <div class="col">
+          <div class="col col-short">
             <label>State *</label>
             <select id="patState">
               <option value="">Select</option>
-              <option value="NSW">New South Wales</option>
-              <option value="VIC">Victoria</option>
-              <option value="QLD">Queensland</option>
-              <option value="WA">Western Australia</option>
-              <option value="SA">South Australia</option>
-              <option value="TAS">Tasmania</option>
-              <option value="ACT">Australian Capital Territory</option>
-              <option value="NT">Northern Territory</option>
+              <option value="NSW">NSW</option>
+              <option value="VIC">VIC</option>
+              <option value="QLD">QLD</option>
+              <option value="WA">WA</option>
+              <option value="SA">SA</option>
+              <option value="TAS">TAS</option>
+              <option value="ACT">ACT</option>
+              <option value="NT">NT</option>
             </select>
             <small class="field-error" id="errState"></small>
           </div>
@@ -126,7 +125,6 @@
           </div>
         </div>
 
-        <!-- Emergency Contact Row -->
         <div class="row emergencyRow">
           <div class="col">
             <label>Emergency Contact Full Name *</label>
@@ -140,13 +138,13 @@
           </div>
         </div>
 
-        <!-- Notes -->
         <label>Notes</label>
         <textarea id="patNotes" rows="5" placeholder="Notes (optional)"></textarea>
 
-        <!-- Submit -->
-        <div class="col">
-          <button id="btnCreatePatient" class="primary">Create Patient</button>
+        <div class="row">
+          <div class="col">
+            <button id="btnCreatePatient" class="primary">Create Patient</button>
+          </div>
         </div>
 
         <pre id="outCreate"></pre>
