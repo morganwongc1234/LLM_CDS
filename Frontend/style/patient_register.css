@@ -1,116 +1,91 @@
-
-
-.rowName input {
-  width: 150px;
-  margin: 0;
-}
-
-.container {
-  grid-template-columns: 1fr;
-  width: 85%;
-}
-
-.form-wrapper {
-  width: 90%;
-}
-
-.col {
-  flex: 1 1 0; /* grow, shrink, start at 0 width */
-  min-width: 0; /* ensures text truncates instead of overflowing */
-  max-width: 300px;
-}
-
-input {
-  max-width: 250px;
-  width: 90%;
-  margin-left: 0;
-}
-
-#patAddressLine1, #patAddressLine2 {
-  max-width: none !important;
-}
-
-textarea {
-  width: 90%;
-  margin-left: 0;
-  min-height: 200px;
-}
-
-#patEmail {
-  max-width: 350px;
-}
-
-#patAddress {
-  max-width: 500px;
-}
-
-.prefix, .sex{
-  margin-right: 40px;
-  max-width: 150px !important;
-}
-
-#patSex, #patPrefix {
-  max-width: 100px !important;
-  margin-left: 0;
-}
-
-.dobSexRow .col, 
-.contactRow .col,
-.emergencyRow .col {
-  flex: 0 0 50%;
-  max-width: 45%;
-}
-
+/* Frontend/style/patient_register.css */
 
 .registerPatientsForm {
   display: flex;
   justify-content: center;
-  align-items: center;
   padding: 3rem 2rem;
   background-color: var(--color-surface);
 }
 
-/* --- REPLACE the old styles at the end of patient_register.css --- */
-
-#outCreate {
-  text-align: left;
-  line-height: 1.6;
-  font-family: var(--font-family); 
+.form-wrapper {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-/* The main outer box */
-.success-message {
-  border: 1px solid var(--color-border);
-  background-color: var(--color-surface);
-  padding: 1rem;
-  border-radius: var(--radius);
+/* --- Grid Layout --- */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  flex: 1; 
+  min-width: 200px;
+}
+
+/* --- ✨ FIX: Specific Column Sizing ✨ --- */
+
+/* Make the Prefix column small and fixed width */
+.col-prefix {
+  flex: 0 0 100px !important;
+  min-width: 80px !important; 
+}
+
+/* ✨ NEW: A generic short column for Sex, State, etc. */
+.col-short {
+  flex: 0 0 120px !important; /* Fixed narrow width */
+  min-width: 100px !important;
+}
+
+/* Make name fields take up the remaining space equally */
+.col-wide {
+  flex: 1;
+}
+
+/* --- Input Alignment & Sizing --- */
+label {
+  margin-bottom: 0.3rem;
+  font-weight: 600;
   color: var(--color-text);
-  font-family: var(--font-family); /* Ensures correct font */
 }
 
-.success-message strong {
-  color: var(--color-primary);
-  font-size: 1.1rem;
+input, select {
+  height: 45px !important;
+  padding: 0.6rem 0.8rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.success-message p {
-  margin: 0.75rem 0 0.5rem;
+textarea {
+  min-height: 120px;
+  resize: vertical;
 }
 
-/* The inner box with the login details */
-.login-details-box {
-  background-color: var(--color-bg);
-  border: 1px dashed var(--color-primary);
-  padding: 0.75rem;
-  font-size: 1.1rem;
-  line-height: 1.8;
-  user-select: all;
-  border-radius: var(--radius);
-  font-family: inherit; 
+#patDOB, #patPhone, #patEmail, #patEmergencyName, #patEmergencyPhone { width: 80%; margin-left: 0;}
+
+#patSex { width: 30%; margin-left: 0;}
+
+/* --- Error Message Spacing --- */
+.field-error {
+  min-height: 20px; 
+  margin-top: 2px;
+  font-size: 0.85rem;
 }
 
-/* The password text */
-.temp-password {
-    font-weight: 700;
-    color: var(--color-primary-hover);
+/* --- Buttons --- */
+.row button {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+@media (min-width: 600px) {
+  .row button {
+    width: auto;
+    min-width: 150px;
+  }
 }

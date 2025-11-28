@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <title>Patient Details – CDS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="style.css" />
@@ -10,7 +10,6 @@
 <body>
   <h1>Patient Information</h1>
   <nav id="mainNav"></nav>
-  <nav id="subNav"></nav>
 
   <div class="container form-container-page">
     <div class="form-wrapper" style="width: 90%; border-radius: 1.5rem;">
@@ -23,6 +22,23 @@
       <div class="button-row">
         <button id="btnUpdatePatientDetails" class="primary">Update Patient Details</button>
       </div>
+    </div>
+  </div>
+
+  <div class="container form-container-page" style="margin-top: 2rem;">
+    <div class="form-wrapper" style="width: 90%; border-radius: 1.5rem;">
+      <legend>Add Clinical Note</legend>
+      <p class="note" style="color: #666; margin-bottom: 1rem;">
+        Paste unstructured consultation notes here. The system will use AI to extract symptoms, labs, and history automatically.
+      </p>
+      
+      <textarea id="ehrTextInput" rows="6" style="width: 100%; padding: 1rem; border-radius: 0.5rem; border: 1px solid #ccc;" placeholder="e.g., 45yo male presents with 3-day history of fever and productive cough. BP 130/85..."></textarea>
+      
+      <div class="button-row">
+        <button id="btnSaveNote" class="primary">Save Clinical Note</button>
+      </div>
+      
+      <div id="ehrStatusMsg" style="margin-top: 1rem; font-weight: 600;"></div>
     </div>
   </div>
 
