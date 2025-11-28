@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>EHR Report – CDS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style/profile.css" />
+  <link rel="stylesheet" href="style/ehr_report.css" />
+</head>
+<body>
+  <h1>EHR Clinical Report</h1>
+  <nav id="mainNav"></nav>
+
+  <div class="container">
+    
+    <div class="button-row" style="margin-bottom: 1rem;">
+      <button id="btnBack" class="secondary">← Back to Search</button>
+    </div>
+
+    <div class="form-wrapper section-card" id="metaCard">
+      <h3>Note Metadata</h3>
+      <div id="metaContent">Loading...</div>
+    </div>
+
+    <div class="form-wrapper section-card">
+      <h3>Original Clinical Note</h3>
+      <pre id="rawTextContent" style="white-space: pre-wrap; font-family: inherit; color: #4b5563;"></pre>
+    </div>
+
+    <div id="parsedContent">
+      </div>
+
+  </div>
+
+  <script type="module" src="js/common.js"></script>
+  <script type="module" src="js/ehr_report.js"></script>
+</body>
+</html>

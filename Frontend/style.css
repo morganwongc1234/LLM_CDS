@@ -9,10 +9,9 @@
   --color-border: #e5e7eb;
   --color-shadow: rgba(0, 0, 0, 0.08);
   --radius: 0.6rem;
-  --transition: 0.25s ease;
+  --transition: 0.2s ease;
   --nav-height: 48px;
-  --nav-pad-x: 18px;
-  --nav-min-width: 50px;
+  --btn-height: 48px; /* New standard height */
 }
 
 body {
@@ -42,6 +41,7 @@ small {
   color: var(--color-text-muted);
 }
 
+/* --- NAVBAR --- */
 .navbar {
   display: flex;
   align-items: center;
@@ -62,19 +62,17 @@ small {
   align-items: center;
   justify-content: center;
   height: var(--nav-height);
-  min-width: var(--nav-min-width);
-  padding: 0 var(--nav-pad-x);
+  padding: 0 1.2rem; /* Standard padding */
   border-radius: var(--radius);
   background: var(--color-surface);
   color: var(--color-text);
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.95rem;
   border: 1px solid var(--color-border);
   text-decoration: none;
   cursor: pointer;
-  transition: background-color var(--transition), border-color var(--transition), color var(--transition), box-shadow var(--transition);
+  transition: all var(--transition);
   box-shadow: 0 1px 3px var(--color-shadow);
-  pointer-events: auto;
 }
 
 .navbar a:hover,
@@ -107,7 +105,8 @@ small {
   color: #fff;
   border: none;
   border-radius: var(--radius);
-  padding: 0.6rem 1.1rem;
+  padding: 0 1.2rem;
+  height: var(--nav-height);
   font-weight: 700;
   cursor: pointer;
   transition: background-color var(--transition);
@@ -117,16 +116,88 @@ small {
   background-color: var(--color-primary-hover);
 }
 
-/* Dropdown (hover opens the menu) */
+/* --- BUTTONS (Standardized) --- */
+button.primary,
+button.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--btn-height);
+  padding: 0 1.5rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition);
+  /* Ensure consistent width behavior */
+  min-width: 120px; 
+  margin-top: 0.5rem;
+}
+
+/* Primary (Blue Filled) */
+button.primary {
+  background-color: var(--color-primary);
+  color: white;
+  border: 1px solid var(--color-primary);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+  width: 100%; /* Often full width in forms, can be overridden */
+}
+
+button.primary:hover {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+button.primary:active {
+  transform: translateY(0);
+}
+
+/* Secondary (White/Transparent with Blue Border) */
+button.secondary {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-border); /* Softer border by default */
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  width: 100%; /* Match primary behavior */
+}
+
+button.secondary:hover {
+  border-color: var(--color-primary);
+  background-color: #eff6ff; /* Very light blue tint */
+  color: var(--color-primary-hover);
+}
+
+/* Tertiary (Link style) */
+button.tertiary {
+  background-color: transparent;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  border: none;
+  padding: 0.6rem 1rem;
+  margin-top: 0.4rem;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+  display: inline-block;
+}
+
+button.tertiary:hover {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+
+/* --- DROPDOWN --- */
 .dropdown {
   position: relative;
   display: inline-flex;
   align-items: stretch;
 }
 
-/* Prevent default click behavior on dropdown button */
 .dropdown .dropbtn {
-  pointer-events: none;
+  pointer-events: none; /* handled by JS click on parent usually, or adjust logic */
 }
 
 /* Allow hover to work on the entire dropdown container */
@@ -146,26 +217,18 @@ small {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   padding: 0.5rem;
   z-index: 1000;
-  pointer-events: auto;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s ease, visibility 0s linear 0.3s;
 }
 
-/* Show dropdown when hovering on the dropdown container */
-.dropdown:hover .dropdown-content {
+.dropdown:hover .dropdown-content,
+.dropdown.open .dropdown-content {
   opacity: 1;
   visibility: visible;
   transition: opacity 0.2s ease, visibility 0s linear 0s;
 }
 
-/* Keep dropdown visible when hovering over the menu itself */
-.dropdown-content:hover {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* Dropdown menu links */
 .dropdown-content a {
   display: block;
   padding: 0.6rem 0.8rem;
@@ -178,6 +241,8 @@ small {
   box-shadow: none;
   min-width: auto;
   height: auto;
+  text-align: left; /* dropdown links usually left aligned */
+  justify-content: flex-start;
 }
 
 .dropdown-content a:hover {
@@ -185,12 +250,8 @@ small {
   color: #fff;
 }
 
-.dropdown.open .dropdown-content {
-  opacity: 1 !important;
-  visibility: visible !important;
-  transition: opacity 0.2s ease, visibility 0s linear 0s !important;
-}
 
+/* --- FORMS & INPUTS --- */
 fieldset {
   margin-top: 2rem;
   border: 1px solid var(--color-border);
@@ -205,7 +266,7 @@ legend {
   font-weight: 700;
   font-size: 1.75rem;
   text-align: center;
-  width: 100%; /* ensures centring works properly across browsers */
+  width: 100%; 
   display: block;
 }
 
@@ -222,7 +283,6 @@ legend {
 
 .container {
   display: grid;
-  /* grid-template-columns: 1fr 1fr; */
   gap: 0;
   margin: 3rem auto;
   width: 80%;
@@ -243,25 +303,9 @@ label {
   margin-top: 0.6rem;
 }
 
-/* input, textarea {
-  width: 90%;
-  padding: 0.65rem 0.8rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  font-size: 1rem;
-  margin-top: 0.35rem;
-  background-color: var(--color-surface);
-  color: var(--color-text);
-  transition: border-color var(--transition), box-shadow var(--transition);
-  
-  display: block;
-  margin-left: 0;
-  margin-right: 0;
-} */
-
 select, input, textarea {
   width: 100%;
-  padding: 0.65rem 0.8rem;
+  padding: 0.75rem 1rem; /* Slightly larger padding for inputs */
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   font-size: 1rem;
@@ -271,86 +315,18 @@ select, input, textarea {
   color: var(--color-text);
   transition: border-color var(--transition), box-shadow var(--transition);
   appearance: none;
-
   display: block;
   margin-left: auto;
   margin-right: auto;
 }
 
-
-
 input:focus, select:focus, textarea:focus {
   border-color: var(--color-primary);
   outline: none;
-  box-shadow: 0 0 6px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); /* Cleaner focus ring */
 }
 
-button.primary {
-  margin-top: 0.5rem;
-  font-size: 1.1rem;
-  padding: 0.85rem 1.5rem;
-  width: 100%;
-  background-color: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
-  font-weight: 700;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.1s ease;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-}
-
-button.primary:hover {
-  background-color: var(--color-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-}
-
-button.primary:active {
-  transform: translateY(0);
-}
-
-button.secondary {
-  background-color: transparent;
-  font-size: 0.8rem;
-  color: var(--color-primary);
-  border: 1px solid var(--color-primary);
-  padding: 0.6rem 1.2rem;
-  margin-top: 0.5rem;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  display: block;
-}
-
-button.secondary:hover {
-  background-color: rgba(37, 99, 235, 0.1);
-}
-
-button.tertiary {
-  background-color: transparent;
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-  border: none;
-  padding: 0.6rem 1rem;
-  margin-top: 0.4rem;
-  border-radius: var(--radius);
-  cursor: pointer;
-  text-decoration: underline;
-  transition: color 0.2s ease;
-  display: inline-block;
-}
-
-button.tertiary:hover {
-  color: var(--color-primary);
-  text-decoration: none;
-}
-
-button.tertiary:active {
-  background-color: #e5e7eb;
-  color: var(--color-text);
-}
-
+/* --- TABLES --- */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -380,21 +356,24 @@ tr:hover td {
   cursor: pointer;
 }
 .table tbody tr.clickable-row:hover {
-  background-color: #f0f8ff; /* Light blue highlight */
+  background-color: #f0f8ff; 
 }
 
+/* --- STATUS BADGES --- */
 .status {
   display: inline-block;
   padding: 0.35rem 0.8rem;
   border-radius: 1rem;
   font-weight: 700;
   transition: all var(--transition);
+  font-size: 0.85rem;
 }
 
 .status.success { background-color: #dcfce7; color: #166534; }
 .status.error { background-color: #fee2e2; color: #991b1b; }
 .status.neutral { background-color: #f3f4f6; color: #374151; }
 
+/* --- ERRORS --- */
 .field-error {
   display: block;
   margin-top: 0.35rem;
@@ -428,75 +407,28 @@ tr:hover td {
   margin-top: 0;
 }
 
-/* ===============================
-   Create Patient Page Layout
-   =============================== */
-
-#createPatientForm {
+/* --- HELPERS --- */
+.form {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-#createPatientForm input,
-#createPatientForm select,
-#createPatientForm textarea {
-  width: 100%;
-  max-width: 680px;
-}
-
-/* Style only the inputs in the create patient form */
-#createPatientForm input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 2rem;
   background-color: var(--color-surface);
-  font-size: 1rem;
-  margin-top: 0.4rem;
-  transition: border-color var(--transition), box-shadow var(--transition);
 }
 
-#createPatientForm select {
-  width: 10%; /* narrower than input */
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background-color: var(--color-surface);
-  font-size: 1rem;
-  margin-top: 0.4rem;
-  transition: border-color var(--transition), box-shadow var(--transition);
+.row.align-bottom {
+  align-items: flex-end;
 }
 
-#createPatientForm textarea {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background-color: var(--color-surface);
-  font-size: 1rem;
-  margin-top: 0.4rem;
-  transition: border-color var(--transition), box-shadow var(--transition);
-  min-height: 120px; /* longer height */
-}
+/* --- CREATE PATIENT SPECIFIC --- */
+#createPatientForm input { width: 100%; }
+#createPatientForm select { width: 10%; }
+#createPatientForm textarea { min-height: 120px; }
+#createPatientForm label { display: block; padding-left: 0.5rem; }
+#createPatientForm button.primary { margin-top: 1rem; }
 
-/* Optional: add space above the submit button */
-#createPatientForm button {
-  margin-top: 1rem;
-}
-
-#createPatientForm label {
-  display: block;
-  padding-left: 0.5rem; /* or use margin-left if you prefer */
-}
-
-#createPatientForm button.primary {
-  font-size: 1.1rem; /* increase as needed, e.g. 1.2rem or 18px */
-  padding: 0.8rem 1.6rem; /* optional: gives it a bit more breathing space */
-}
-
-/* Image on the left */
-.register-illustration {
+/* --- IMAGES --- */
+.register-illustration, .login-illustration {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -504,7 +436,7 @@ tr:hover td {
   background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
 }
 
-.register-illustration img {
+.register-illustration img, .login-illustration img {
   width: 100%;
   max-width: 450px;
   height: auto;
@@ -512,8 +444,7 @@ tr:hover td {
   display: block;
 }
 
-/* Form container on the right */
-.register-form {
+.register-form, .loginForm {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -521,38 +452,9 @@ tr:hover td {
   background-color: var(--color-surface);
 }
 
-.loginForm {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 3rem 2rem;
-  background-color: var(--color-surface);
-}
-
-/* Register button */
+/* Specific overrides for register button if needed */
 #btnRegister {
   margin-top: 0.5rem;
-  font-size: 1.1rem;
-  padding: 0.85rem 1.5rem;
-  width: 100%;
-  background-color: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
-  font-weight: 700;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.1s ease;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-}
-
-#btnRegister:hover {
-  background-color: var(--color-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-}
-
-#btnRegister:active {
-  transform: translateY(0);
 }
 
 #statusMsg {
@@ -568,12 +470,4 @@ footer {
   margin-top: 3rem;
   color: var(--color-text-muted);
   font-size: 0.9rem;
-}
-
-.form {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 3rem 2rem;
-  background-color: var(--color-surface);
 }

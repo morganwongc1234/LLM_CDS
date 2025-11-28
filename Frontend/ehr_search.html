@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Search EHR Records</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style/patient_list.css" />
+</head>
+<body>
+  <h1>EHR Repository</h1>
+  <nav id="mainNav"></nav>
+
+  <div class="container">
+    <div class="searchPatientsForm">
+      <div class="form-wrapper">
+        <legend>Search EHR Reports</legend>
+        <p class="note">Find patients with existing Electronic Health Records.</p>
+
+        <div class="row">
+          <div class="col">
+            <label>Last Name *</label>
+            <input id="qLast" placeholder="Required" />
+            <small class="field-error" id="errLast"></small>
+          </div>
+          <div class="col">
+            <label>First Name</label>
+            <input id="qFirst" placeholder="Optional" />
+            <small class="field-error" id="errFirst"></small>
+          </div>
+          <div class="col">
+            <label>DOB</label>
+            <input id="qDOB" type="date" />
+            <small class="field-error" id="errDOB"></small>
+          </div>
+        </div>
+
+        <div class="row align-bottom" style="margin-top: 1rem; gap: 1rem;">
+          <div class="col" style="flex: 0 0 auto;">
+            <button id="btnSearch" class="primary">Find Records</button>
+          </div>
+          <div class="col" style="flex: 0 0 auto;">
+            <button id="btnClear" class="secondary">Clear</button>
+          </div>
+        </div>
+
+        <div id="resultsContainer" style="margin-top: 2rem;">
+          </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/common.js"></script>
+  <script type="module" src="js/ehr_search.js"></script>
+</body>
+</html>

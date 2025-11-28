@@ -1,5 +1,6 @@
 import {
   apiGet,
+  apiPost, // ✨ Added apiPost
   initHeader,
   requireAuthGuard,
   formatDate
@@ -7,24 +8,12 @@ import {
 
 const $ = (sel) => document.querySelector(sel);
 
-// Helper to fetch the current user's role
-async function getCurrentUserRole() {
-  try {
-    const r = await apiGet('/me');
-    if (r.ok) {
-      const data = await r.json();
-      // Ensure role is lowercased for safe comparison
-      return data?.me?.role?.toLowerCase() || null; 
-    }
-  } catch {}
-  return null;
-}
-
-// This function will render the patient data (kept the same)
+// This function will render the patient data
 function renderPatientDetail(patient) {
   const container = $('#patientInfo'); 
   if (!container) return;
 
+  // Render the patient data as a table
   container.innerHTML = `
     <h2>${[patient.prefix, patient.first_name, patient.last_name].filter(Boolean).join(' ')}</h2>
     
@@ -69,7 +58,7 @@ function renderPatientDetail(patient) {
         <tr>
           <td><strong>Notes:</strong></td>
           <td>
-            <pre style="margin: 0; white-space: pre-wrap; font-family: inherit;">${patient.notes_text ?? 'No notes.'}</pre>
+            <pre>${patient.notes_text ?? 'No notes.'}</pre>
           </td>
         </tr>
       </tbody>
@@ -77,13 +66,76 @@ function renderPatientDetail(patient) {
   `;
 }
 
+function wireButton(patientId) {
+  $('#btnUpdatePatientDetails')?.addEventListener('click', () => {
+    // Go to a new edit page, passing the patient ID
+    window.location.href = `patient_edit.html?id=${patientId}`;
+  });
+}
 
+// ✨ NEW: Logic to handle the "Save Note" button
+function wireNoteButton(patientId) {
+  const btn = $('#btnSaveNote');
+  const input = $('#ehrTextInput');
+  const status = $('#ehrStatusMsg');
+
+  if (!btn) return;
+
+  btn.addEventListener('click', async () => {
+    const text = input.value.trim();
+    if (!text) {
+      alert('Please enter a note.');
+      return;
+    }
+
+    // 1. UI Loading State
+    btn.disabled = true;
+    btn.textContent = 'AI Parsing...';
+    status.textContent = '⏳ Analyzing text and extracting data...';
+    status.style.color = '#666';
+
+    try {
+      // 2. Send to Backend
+      const r = await apiPost('/api/ehr/parse', {
+        patient_id: parseInt(patientId),
+        ehr_text: text
+      });
+
+      const data = await r.json();
+
+      if (r.ok) {
+        // 3. Success!
+        status.innerHTML = `✅ Note Saved! (EHR ID: ${data.ehr_id})`;
+        status.style.color = '#166534'; // Green
+        input.value = ''; // Clear the box
+        
+        // Optional: Reload page after 2s to show updated data if you were listing notes
+        // setTimeout(() => location.reload(), 2000); 
+      } else {
+        // 4. Error from Server
+        status.textContent = `❌ Error: ${data.error || 'Failed to save note.'}`;
+        status.style.color = '#dc2626'; // Red
+      }
+    } catch (err) {
+      // 5. Network Error
+      console.error(err);
+      status.textContent = '❌ Network error.';
+      status.style.color = '#dc2626';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Save Clinical Note';
+    }
+  });
+}
+
+// This function will run when the page loads
 async function initPage() {
   await initHeader();
   if (!requireAuthGuard()) return;
 
   const container = $('#patientInfo');
-  
+
+  // 1. Get the patient ID from the URL
   const urlParams = new URLSearchParams(window.location.search);
   const patientId = urlParams.get('id');
 
@@ -91,39 +143,23 @@ async function initPage() {
     container.innerHTML = '<p class="error">Error: No patient ID found in URL.</p>';
     return;
   }
-  
-  // ✨ Get the user's role
-  const role = await getCurrentUserRole();
-  const btnUpdate = $('#btnUpdatePatientDetails');
 
-  // ✨ Role Check: Disable button if Admin
-  if (role === 'admin') {
-    if (btnUpdate) {
-        btnUpdate.disabled = true;
-        btnUpdate.textContent = 'Editing Not Permitted (Admin)';
-        btnUpdate.style.opacity = 0.5;
-        btnUpdate.style.cursor = 'not-allowed';
-    }
-  } else {
-    // Only wire the button if it's NOT an Admin
-    if (btnUpdate) {
-      btnUpdate.onclick = () => {
-        window.location.href = `patient_edit.html?id=${patientId}`;
-      };
-    }
-  }
-
-  // Fetch the patient data
+  // 2. Fetch the data from our API endpoint
   try {
     const r = await apiGet(`/patients/${patientId}`);
     const data = await r.json();
 
     if (!r.ok) {
-      container.innerHTML = `<p class="error">Error: ${data.error || 'Could not fetch patient data.'}</p>`;
+      container.innerHTML = `<p class="error">${data.error || 'Could not fetch patient data.'}</p>`;
       return;
     }
 
+    // 3. Render the data
     renderPatientDetail(data);
+
+    // 4. Wire up buttons
+    wireButton(patientId);
+    wireNoteButton(patientId); // ✨ Wire the new note button
 
   } catch (err) {
     console.error('Fetch error:', err);

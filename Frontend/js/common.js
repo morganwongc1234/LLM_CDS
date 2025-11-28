@@ -1,5 +1,5 @@
 // Frontend/js/common.js
-// Shared helpers + dynamic navigation (with Patients dropdown)
+// Shared helpers + dynamic navigation + footer
 
 export const API_BASE = ''; // same origin
 
@@ -43,16 +43,14 @@ export async function apiDelete(path) {
   });
 }
 
-// ------- Path prefix helper (so links work from /homepage/* too) -------
+// ------- Path prefix helper -------
 function prefixToRoot() {
-  // If this page lives in /homepage/, links need "../"
   const p = location.pathname;
   if (p.includes('/homepage/')) return '../';
-  // add more folders here if needed in future (e.g., /patients/)
   return '';
 }
 
-// ------- Main Nav rendering (with Patients dropdown) -------
+// ------- Main Nav rendering -------
 export function renderMainNav(containerEl, user) {
   if (!containerEl) return;
 
@@ -60,56 +58,53 @@ export function renderMainNav(containerEl, user) {
   const isAuthed = !!user;
   const email = user?.email || null;
 
-  // Choose dashboard page based on role
-  let dashboardHref = `${pre}index.html`; // safe fallback
+  let dashboardHref = `${pre}index.html`;
   const role = (user?.role || '').toLowerCase();
   
   if (role === 'admin') dashboardHref = `${pre}homepage/admin.html`;
   else if (role === 'clinician' || role === 'researcher') dashboardHref = `${pre}homepage/clinician.html`;
   else if (role === 'patient') dashboardHref = `${pre}homepage/patient.html`;
 
-  // --- PERMISSION FLAGS ---
-  const isAdmin = role === 'admin';
   const isMedicalStaff = role === 'clinician' || role === 'researcher';
+  const isAdmin = role === 'admin';
 
-  // --- CONDITIONAL NAVIGATION LINKS ---
-  let patientsLinkHTML = '';
-  let reportsLink = '';
-  let analyticsLink = '';
+  // 1. Patients Dropdown (Medical Only)
+  const patientsDropdown = isMedicalStaff
+    ? `
+    <div class="dropdown">
+      <button class="dropbtn" type="button" style="font-weight:700;">
+        Patients 
+      </button>
+      <div class="dropdown-content" role="menu">
+        <a href="${pre}patients_list.html" role="menuitem">Patients List</a>
+        <a href="${pre}patient_register.html" role="menuitem">Register Patient</a>
+      </div>
+    </div>
+  ` : '';
+
+  const reportsDropdown = isMedicalStaff
+    ? `
+    <div class="dropdown">
+      <button class="dropbtn" type="button" style="font-weight:700;">
+        Reports 
+      </button>
+      <div class="dropdown-content" role="menu">
+        <a href="${pre}ehr_search.html" role="menuitem">EHR Reports</a>
+        <a href="${pre}reports.html" role="menuitem">Diagnostic Reports</a>
+      </div>
+    </div>
+  ` : '';
+
+  const analyticsLink = isMedicalStaff ? `<a href="${pre}analytics.html">Analytics</a>` : '';
   const usersLink = isAdmin ? `<a href="${pre}users.html">Users</a>` : '';
 
-
-  if (isAdmin) {
-      // ADMIN: Only a direct link to the list
-      patientsLinkHTML = `<a href="${pre}patients_list.html">Patients</a>`;
-  } else if (isMedicalStaff) {
-      // CLINICIAN/RESEARCHER: Dropdown for Patient List + Register
-      patientsLinkHTML = `
-        <div class="dropdown">
-          <button class="dropbtn" type="button" style="font-weight:700;">
-            Patients 
-          </button>
-          <div class="dropdown-content" role="menu">
-            <a href="${pre}patients_list.html" role="menuitem">Patients List</a>
-            <a href="${pre}patient_register.html" role="menuitem">Register Patient</a>
-          </div>
-        </div>
-      `;
-      // Clinician/Researcher also get Reports/Analytics
-      reportsLink = `<a href="${pre}reports.html">Reports</a>`;
-      analyticsLink = `<a href="${pre}analytics.html">Analytics</a>`;
-  }
-
-
-  // Left Nav Links
   const left = isAuthed
     ? `
       <a href="${pre}index.html">Home</a>
       <a href="${dashboardHref}">Dashboard</a>
       ${usersLink}
-      ${patientsLinkHTML}
-      ${reportsLink}
-      ${analyticsLink}
+      ${patientsDropdown}
+      ${reportsDropdown} ${analyticsLink}
     `
     : `
       <a href="${pre}index.html">Home</a>
@@ -117,7 +112,6 @@ export function renderMainNav(containerEl, user) {
       <a href="${pre}register.html">Register</a>
     `;
 
-  // Right Nav Links
   const right = isAuthed
     ? `
       <span class="badge ok">${email}</span>
@@ -145,19 +139,33 @@ export function renderMainNav(containerEl, user) {
     });
   }
 
-  // Dropdown wiring (only needed for the Clinician/Researcher dropdown)
-  const dd = containerEl.querySelector('.dropdown');
-  const btn = containerEl.querySelector('.dropbtn');
-  if (dd && btn) {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dd.classList.toggle('open');
+  // ✨ NEW: Support MULTIPLE dropdowns
+  const dropdowns = containerEl.querySelectorAll('.dropdown');
+  dropdowns.forEach(dd => {
+    const btn = dd.querySelector('.dropbtn');
+    if (btn) {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Close any OTHER open dropdowns first
+        dropdowns.forEach(other => {
+          if (other !== dd) other.classList.remove('open');
+        });
+
+        dd.classList.toggle('open');
+      });
+    }
+  });
+
+  // Close ALL dropdowns when clicking outside
+  document.addEventListener('click', (e) => {
+    dropdowns.forEach(dd => {
+      if (!dd.contains(e.target)) {
+        dd.classList.remove('open');
+      }
     });
-    document.addEventListener('click', (e) => {
-      if (!dd.contains(e.target)) dd.classList.remove('open');
-    });
-  }
+  });
 }
 
 // ------- Init header on each page -------
@@ -165,7 +173,6 @@ export async function initHeader() {
   const mainNav = document.querySelector('#mainNav');
   let user = null;
 
-  // Try to decode user from /me (protected)
   try {
     const r = await apiGet('/me');
     if (r.ok) {
@@ -179,10 +186,28 @@ export async function initHeader() {
   if (mainNav) renderMainNav(mainNav, user);
 }
 
-// Auto-init if the page includes #mainNav and this script is loaded standalone
+// ------- Footer Rendering -------
+export function renderFooter() {
+  const footer = document.querySelector('footer') || document.querySelector('.health-footer');
+  if (!footer) return;
+
+  const year = new Date().getFullYear();
+  
+  let pageName = footer.getAttribute('data-page');
+  if (!pageName) {
+    const title = document.title || '';
+    pageName = title.split('–')[0].trim(); 
+    if (!pageName) pageName = 'CDS Portal';
+  }
+
+  footer.innerHTML = `<p>${year} BIOM9450 CDS | ${pageName}</p>`;
+}
+
+// ------- Auto-Init -------
 document.addEventListener('DOMContentLoaded', () => {
   const mainNav = document.querySelector('#mainNav');
   if (mainNav) initHeader();
+  renderFooter();
 });
 
 export function setYear(sel) {
@@ -194,51 +219,29 @@ export function requireAuthGuard() {
   const token = getToken();
   if (!token) {
     alert('Please login first.');
-
-    // Detect subfolder
-    const redirect = location.pathname.includes('/homepage/')
-      ? '../login.html'
-      : 'login.html';
-
+    const redirect = location.pathname.includes('/homepage/') ? '../login.html' : 'login.html';
     window.location.href = redirect;
     return false;
   }
   return true;
 }
 
+export function formatDate(dateString) {
+  if (!dateString) return '';
+  const datePart = dateString.split('T')[0];
+  const [year, month, day] = datePart.split('-');
+  return `${day}/${month}/${year}`;
+}
+
 // ------- Input Validation Helpers -------
-
 export function setError(inputEl, errorEl = null, msg = '') {
-  // We are now passing in the element directly, so no querySelector is needed.
-  
-  // If no errorEl was passed, try to find the next sibling
-  if (!errorEl) {
-    errorEl = inputEl?.nextElementSibling;
-  }
-
+  if (!errorEl) errorEl = inputEl?.nextElementSibling;
   if (inputEl) inputEl.classList.add('error');
   if (errorEl) errorEl.textContent = msg;
 }
 
 export function clearError(inputEl, errorEl = null) {
-  // We are now passing in the element directly, so no querySelector is needed.
-  
-  // If no errorEl was passed, try to find the next sibling
-  if (!errorEl) {
-    errorEl = inputEl?.nextElementSibling;
-  }
-  
+  if (!errorEl) errorEl = inputEl?.nextElementSibling;
   if (inputEl) inputEl.classList.remove('error');
   if (errorEl) errorEl.textContent = '';
-}
-
-// ------- Helper Functions -------
-export function formatDate(dateString) {
-  if (!dateString) {
-    return '';
-  }
-  // This avoids timezone issues by just splitting the string
-  const datePart = dateString.split('T')[0]; // -> "2003-12-11"
-  const [year, month, day] = datePart.split('-');
-  return `${day}/${month}/${year}`; // -> "11/12/2003"
 }

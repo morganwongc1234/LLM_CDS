@@ -863,22 +863,45 @@ app.post('/api/ehr/parse', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'patient_id and ehr_text are required.' });
     }
 
-    // Check patient exists
+    // 1. Fetch Patient Details (Name, DOB, Sex) AND existing notes
     const [patientRows] = await pool.query(
-      'SELECT patient_id FROM patients WHERE patient_id = ?',
+      `SELECT patient_id, first_name, last_name, date_of_birth, sex, notes_text 
+       FROM patients WHERE patient_id = ?`,
       [patient_id]
     );
+
     if (patientRows.length === 0) {
       return res.status(404).json({ error: 'Patient not found.' });
     }
 
-    // 1) Parse to snapshot
-    const snapshot = await parseEhrToSnapshot(ehr_text, { locale });
+    const patient = patientRows[0];
+    
+    // 2. Format Patient Demographics for the AI
+    const demographics = `
+      Patient Name: ${patient.first_name} ${patient.last_name}
+      DOB: ${patient.date_of_birth || 'Unknown'}
+      Sex: ${patient.sex || 'Unknown'}
+    `.trim();
 
-    // 2) Map to DB columns
-    const { labs_json, symptoms_json, history_text } = snapshotToEhrDbFields(snapshot, ehr_text);
+    // 3. Combine everything into one rich context
+    const fullClinicalText = `
+      [Patient Demographics]:
+      ${demographics}
 
-    // 3) Insert into ehr_inputs
+      [Background/Demographic Notes]:
+      ${patient.notes_text || 'None'}
+
+      [Current Consultation Note]:
+      ${ehr_text}
+    `.trim();
+
+    // 4. Parse to snapshot using OpenAI
+    const snapshot = await parseEhrToSnapshot(fullClinicalText, { locale });
+
+    // 5. Map to DB columns
+    const { labs_json, symptoms_json, history_text } = snapshotToEhrDbFields(snapshot, fullClinicalText);
+
+    // 6. Insert into ehr_inputs
     const [insertResult] = await pool.query(
       `INSERT INTO ehr_inputs (patient_id, author_user_id, labs_json, symptoms_json, history_text)
        VALUES (?, ?, ?, ?, ?)`,
@@ -900,39 +923,111 @@ app.post('/api/ehr/parse', authMiddleware, async (req, res) => {
     });
   } catch (err) {
     console.error('POST /api/ehr/parse error:', err);
-    res.status(500).json({ error: 'Failed to parse and save EHR.' });
+    res.status(500).json({ error: 'Failed to parse and save EHR.', detail: err.message });
   }
 });
 
-// Returns the stored snapshot (from symptoms_json) plus raw DB fields
-app.get('/api/ehr/:ehrId', authMiddleware, async (req, res) => {
+// --- Get Patient Clinical History (Notes & Reports) ---
+app.get('/api/patients/:id/history', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+
   try {
-    if (!isClinicalRole(req.user)) {
-      return res.status(403).json({ error: 'Access denied.' });
-    }
-
-    const ehrId = parseInt(req.params.ehrId, 10);
-    if (Number.isNaN(ehrId)) {
-      return res.status(400).json({ error: 'Invalid ehr_id.' });
-    }
-
-    const [rows] = await pool.query(
-      `SELECT ehr_id, patient_id, author_user_id, labs_json, symptoms_json, history_text, created_at
-       FROM ehr_inputs
-       WHERE ehr_id = ?`,
-      [ehrId]
+    // 1. Fetch Clinical Notes (EHR Inputs)
+    // We join with 'users' to get the doctor's name
+    const [notes] = await pool.execute(
+      `SELECT e.ehr_id, e.created_at, e.history_text, u.prefix, u.last_name 
+       FROM ehr_inputs e
+       LEFT JOIN users u ON e.author_user_id = u.user_id
+       WHERE e.patient_id = ?
+       ORDER BY e.created_at DESC`,
+      [id]
     );
 
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'EHR not found.' });
-    }
+    // 2. Fetch AI Reports (Linked to this patient via ehr_inputs)
+    const [reports] = await pool.execute(
+      `SELECT r.report_id, r.created_at, r.task_type, r.model_name 
+       FROM llm_reports r
+       JOIN ehr_inputs e ON r.ehr_id = e.ehr_id
+       WHERE e.patient_id = ?
+       ORDER BY r.created_at DESC`,
+      [id]
+    );
+
+    res.json({ notes, reports });
+
+  } catch (err) {
+    console.error(`Error getting history for patient ${id}:`, err);
+    res.status(500).json({ error: 'Database error', detail: err.message });
+  }
+});
+
+// --- Search Patients & Get Latest EHR ID (Inclusive) ---
+app.get('/api/ehr/search', authMiddleware, async (req, res) => {
+  if (!isClinicalRole(req.user)) return res.status(403).json({ error: 'Access denied.' });
+
+  const { last_name, first_name, dob } = req.query;
+  if (!last_name) return res.status(400).json({ error: 'last_name is required' });
+
+  try {
+    const sql = `
+      SELECT 
+        p.patient_id, p.prefix, p.first_name, p.last_name, p.date_of_birth, p.sex,
+        e.ehr_id as latest_ehr_id,
+        e.created_at as latest_ehr_date
+      FROM patients p
+      LEFT JOIN ehr_inputs e ON p.patient_id = e.patient_id 
+        AND e.ehr_id = (
+          SELECT e2.ehr_id FROM ehr_inputs e2 
+          WHERE e2.patient_id = p.patient_id 
+          ORDER BY e2.created_at DESC LIMIT 1
+        )
+      WHERE p.last_name LIKE ?
+      ${first_name ? 'AND p.first_name LIKE ?' : ''}
+      ${dob ? 'AND p.date_of_birth = ?' : ''}
+      ORDER BY p.last_name ASC, p.first_name ASC
+    `;
+
+    const params = [`${last_name}%`];
+    if (first_name) params.push(`${first_name}%`);
+    if (dob) params.push(dob);
+
+    const [rows] = await pool.execute(sql, params);
+    res.json(rows);
+  } catch (err) {
+    console.error('GET /api/ehr/search error:', err);
+    res.status(500).json({ error: 'Database error', detail: err.message });
+  }
+});
+
+// --- 3. Get Single EHR Detail (With Patient Info) ---
+app.get('/api/ehr/:ehrId', authMiddleware, async (req, res) => {
+  try {
+    if (!isClinicalRole(req.user)) return res.status(403).json({ error: 'Access denied.' });
+
+    const ehrId = parseInt(req.params.ehrId, 10);
+    if (Number.isNaN(ehrId)) return res.status(400).json({ error: 'Invalid ehr_id.' });
+
+    const [rows] = await pool.query(`
+      SELECT 
+        e.*, 
+        p.first_name, p.last_name, p.date_of_birth, p.sex 
+      FROM ehr_inputs e
+      JOIN patients p ON e.patient_id = p.patient_id
+      WHERE e.ehr_id = ?
+    `, [ehrId]);
+
+    if (rows.length === 0) return res.status(404).json({ error: 'EHR not found.' });
 
     const row = rows[0];
     let snapshot = null;
 
     try {
-      snapshot = row.symptoms_json ? JSON.parse(row.symptoms_json) : null;
-    } catch (_) {
+      if (typeof row.symptoms_json === 'object' && row.symptoms_json !== null) {
+        snapshot = row.symptoms_json;
+      } else if (typeof row.symptoms_json === 'string') {
+        snapshot = JSON.parse(row.symptoms_json);
+      }
+    } catch (e) {
       snapshot = null;
     }
 
@@ -941,8 +1036,13 @@ app.get('/api/ehr/:ehrId', authMiddleware, async (req, res) => {
       patient_id: row.patient_id,
       author_user_id: row.author_user_id,
       created_at: row.created_at,
+      
+      patient_name: `${row.first_name} ${row.last_name}`,
+      dob: row.date_of_birth,
+      sex: row.sex,
+
       snapshot,
-      labs_json: row.labs_json,
+      labs_json: (typeof row.labs_json === 'string' && row.labs_json) ? JSON.parse(row.labs_json) : row.labs_json,
       history_text: row.history_text
     });
   } catch (err) {
